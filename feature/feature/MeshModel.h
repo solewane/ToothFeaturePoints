@@ -24,6 +24,7 @@ public:
 
 public:
 	int id;
+	bool isValid;
 
 	// 多面体基本信息
 	vtkSmartPointer<vtkSTLReader> reader;		// STL reader
@@ -61,7 +62,7 @@ public:
 	void getNewCor();
 	void getPFH(int i, vtkSmartPointer<vtkDoubleArray> &histogram);
 	void output();
-	void outputToFile(string folderPath);
+	void outputToFilePFH(string folderPath);
 };
 
 #endif

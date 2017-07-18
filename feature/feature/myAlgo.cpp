@@ -65,6 +65,9 @@ void getXYZ(MeshModel m[28], vtkDoubleArray *x, vtkDoubleArray *y, vtkDoubleArra
 	datasetArrZ->SetNumberOfComponents(1);
 	datasetArrZ->SetName("Z");
 	for (int i = 0; i < 28; ++i) {
+		if (!m[i].isValid) {
+			continue;
+		}
 		for (int j = 0; j < m[i].polydata->GetNumberOfPoints(); ++j) {
 			double p[3];
 			m[i].polydata->GetPoint(j, p);
@@ -100,6 +103,9 @@ void autoCheckPCA(MeshModel m[28], vtkSmartPointer<vtkDoubleArray> &mainX, vtkSm
 	double yArr[3] = { mainY->GetValue(0), mainY->GetValue(1), mainY->GetValue(2) };
 	double zArr[3] = { mainZ->GetValue(0), mainZ->GetValue(1), mainZ->GetValue(2) };
 	for (int i = 0; i < 28; ++i) {
+		if (!m[i].isValid) {
+			continue;
+		}
 		int quadrant = i / 7 + 1;
 		int id = i % 7 + 1;
 		double tmpX[3] = { m[i].xAxis->GetValue(0), m[i].xAxis->GetValue(1), m[i].xAxis->GetValue(2) };
@@ -113,6 +119,9 @@ void autoCheckPCA(MeshModel m[28], vtkSmartPointer<vtkDoubleArray> &mainX, vtkSm
 
 	// 得到y轴和z轴
 	for (int i = 0; i < 28; ++i) {
+		if (!m[i].isValid) {
+			continue;
+		}
 		int quadrant = i / 7 + 1;
 		int id = i % 7 + 1;
 		int leftId = i - 1;
@@ -125,6 +134,12 @@ void autoCheckPCA(MeshModel m[28], vtkSmartPointer<vtkDoubleArray> &mainX, vtkSm
 			}
 		}
 		if (id == 7) {
+			rightId = i;
+		}
+		if (!m[leftId].isValid)	{
+			leftId = i;
+		}
+		if (!m[rightId].isValid)	{
 			rightId = i;
 		}
 
@@ -148,6 +163,9 @@ void autoCheckPCA(MeshModel m[28], vtkSmartPointer<vtkDoubleArray> &mainX, vtkSm
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 7; ++j) {
 			int id = i * 7 + j;
+			if (!m[id].isValid)	{
+				continue;
+			}
 			double tmpY[3] = { m[id].yAxis->GetValue(0), m[id].yAxis->GetValue(1), m[id].yAxis->GetValue(2) };
 			if (j == 0) {
 				double product = vtkMath::Dot(tmpY, yArr);
@@ -157,7 +175,11 @@ void autoCheckPCA(MeshModel m[28], vtkSmartPointer<vtkDoubleArray> &mainX, vtkSm
 					}
 				}
 			} else {
-				double lastY[3] = { m[id - 1].yAxis->GetValue(0), m[id - 1].yAxis->GetValue(1), m[id - 1].yAxis->GetValue(2) };
+				int lastYid = id - 1;
+				if (!m[id - 1].isValid)	{
+					lastYid = id - 2;
+				}
+				double lastY[3] = { m[lastYid].yAxis->GetValue(0), m[lastYid].yAxis->GetValue(1), m[lastYid].yAxis->GetValue(2) };
 				double product = vtkMath::Dot(tmpY, lastY);
 				if (product < 0) {
 					for (int k = 0; k < 3; ++k)	{
@@ -170,6 +192,9 @@ void autoCheckPCA(MeshModel m[28], vtkSmartPointer<vtkDoubleArray> &mainX, vtkSm
 
 	// 直接计算x轴和y轴叉积得到z轴
 	for (int i = 0; i < 28; ++i) {
+		if (!m[i].isValid) {
+			continue;
+		}
 		double tmpX[3] = { m[i].xAxis->GetValue(0), m[i].xAxis->GetValue(1), m[i].xAxis->GetValue(2) };
 		double tmpY[3] = { m[i].yAxis->GetValue(0), m[i].yAxis->GetValue(1), m[i].yAxis->GetValue(2) };
 		double tmp[3];

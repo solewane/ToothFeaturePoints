@@ -20,6 +20,7 @@ MeshModel::MeshModel() {
 
 	xCorMin = xCorMax = yCorMin = yCorMax = zCorMin = zCorMax = 0;
 	maxLen = 0;
+	isValid = false;
 }
 
 // 读取模型STL文件
@@ -27,6 +28,14 @@ void MeshModel::readSTL(string folderPath, int id) {
 	this->id = id;
 	stringstream stream;
 	stream << folderPath << "\\" << (id / 7 + 1) << (id % 7 + 1) << ".stl";
+
+	ifstream inFile(stream.str().c_str());
+	if (!inFile) {
+		return;
+	}
+	isValid = true;
+	inFile.close();
+
 	reader->SetFileName(stream.str().c_str());
 	reader->Update();
 
@@ -35,6 +44,10 @@ void MeshModel::readSTL(string folderPath, int id) {
 
 // 更新网格模型各项数值
 void MeshModel::update() {
+	if (!isValid) {
+		return;
+	}
+
 	// 获得多面体重心
 	getCenterOfMass(polydata, center);
 
@@ -74,6 +87,10 @@ void MeshModel::getNormal() {
 
 // 获得多面体各点在新坐标系下的坐标
 void MeshModel::getNewCor() {
+	if (!isValid) {
+		return;
+	}
+
 	vtkSmartPointer<vtkDoubleArray> l1 = vtkSmartPointer<vtkDoubleArray>::New();
 	vtkSmartPointer<vtkDoubleArray> l2 = vtkSmartPointer<vtkDoubleArray>::New();
 	vtkSmartPointer<vtkDoubleArray> l3 = vtkSmartPointer<vtkDoubleArray>::New();
@@ -125,15 +142,14 @@ void MeshModel::getPFH(int i, vtkSmartPointer<vtkDoubleArray> &histogram) {
 
 // 输出调试信息
 void MeshModel::output() {
-	vtkSmartPointer<vtkDoubleArray> histogram = vtkSmartPointer<vtkDoubleArray>::New();
-	getPFH(12, histogram);
-	for (int i = 0; i < histogram->GetNumberOfTuples(); ++i) {
-		cout << histogram->GetValue(i) << "\t";
-	}
 	cout << endl;
 }
 
-void MeshModel::outputToFile(string folderPath) {
+void MeshModel::outputToFilePFH(string folderPath) {
+	if (!isValid) {
+		return;
+	}
+
 	stringstream stream;
 	stream << folderPath << "\\" << (id / 7 + 1) << (id % 7 + 1) << ".txt";
 	ofstream outputFile(stream.str().c_str());
