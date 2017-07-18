@@ -19,25 +19,18 @@ X = []
 with open('train_in.txt', 'r') as inFile:
     file_list = inFile.readlines()
 for i in file_list:
-    curr_line_val = []
-    for j in i.rstrip('\n').split(' '):
-        curr_line_val.append(eval(j))
-    X.append(curr_line_val)
+    X.append(list(map(eval, i.rstrip('\n').split(' '))))
 
 y = []
 with open('train_out.txt', 'r') as inFile:
     file_list = inFile.readlines()
-for i in file_list:
-    y.append(eval(i.rstrip('\n')))
+y = list(map(eval, file_list))
 
 z = []
 with open('data.txt', 'r') as inFile:
     file_list = inFile.readlines()
 for i in file_list:
-    curr_line_val = []
-    for j in i.rstrip('\n').split(' '):
-        curr_line_val.append(eval(j))
-    z.append(curr_line_val)
+    z.append(list(map(eval, i.rstrip('\n').split(' '))))
 
 # SVR
 svr = SVR(kernel = "linear", C = 1.0, epsilon = 0.01)
