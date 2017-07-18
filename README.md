@@ -9,6 +9,13 @@ argument:
 - 0: output global feature
 - 1: output partial feature
 
+### Train data
+python svr.py
+files:
+- train_in.txt & train_out.txt : train set
+- data.txt : data set
+- predict.txt : output the predict
+
 ## Compilation
 
 ### Feature
