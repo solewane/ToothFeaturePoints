@@ -64,6 +64,7 @@ public:
 	void output();
 	void outputToFilePFH(string folderPath);
 	void outputToFilePos(string folderPath);
+	void outputToFileNewCor(string inPath, string outPath);
 };
 
 #endif

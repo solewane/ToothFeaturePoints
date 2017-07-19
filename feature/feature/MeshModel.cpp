@@ -101,9 +101,9 @@ void MeshModel::getNewCor() {
 		double p[3];
 		polydata->GetPoint(i, p);
 
-		double a = l1->GetValue(0) * p[0] + l1->GetValue(1) * p[1] + l1->GetValue(2) * p[2];
-		double b = l2->GetValue(0) * p[0] + l2->GetValue(1) * p[1] + l2->GetValue(2) * p[2];
-		double c = l3->GetValue(0) * p[0] + l3->GetValue(1) * p[1] + l3->GetValue(2) * p[2];
+		double a = l1->GetValue(0) * (p[0] - center->GetValue(0)) + l1->GetValue(1) * (p[1] - center->GetValue(1)) + l1->GetValue(2) * (p[2] - center->GetValue(2));
+		double b = l2->GetValue(0) * (p[0] - center->GetValue(0)) + l2->GetValue(1) * (p[1] - center->GetValue(1)) + l2->GetValue(2) * (p[2] - center->GetValue(2));
+		double c = l3->GetValue(0) * (p[0] - center->GetValue(0)) + l3->GetValue(1) * (p[1] - center->GetValue(1)) + l3->GetValue(2) * (p[2] - center->GetValue(2));
 
 		xCor->InsertNextValue(a);
 		yCor->InsertNextValue(b);
@@ -178,5 +178,34 @@ void MeshModel::outputToFilePos(string folderPath) {
 		outputFile << zCor->GetValue(i) << " ";
 		outputFile << endl;
 	}
+	outputFile.close();
+}
+
+void MeshModel::outputToFileNewCor(string inPath, string outPath) {
+	if (!isValid) {
+		return;
+	}
+
+	ofstream outputFile(outPath);
+
+	ifstream inFile(inPath);
+	double a, b, c, a1, b1, c1;
+	char d;
+
+	vtkSmartPointer<vtkDoubleArray> l1 = vtkSmartPointer<vtkDoubleArray>::New();
+	vtkSmartPointer<vtkDoubleArray> l2 = vtkSmartPointer<vtkDoubleArray>::New();
+	vtkSmartPointer<vtkDoubleArray> l3 = vtkSmartPointer<vtkDoubleArray>::New();
+
+	getMatrix(xAxis, yAxis, zAxis, l1, l2, l3);
+
+	while (!inFile.eof()) {
+		inFile >> a >> b >> c >> d;
+		a1 = l1->GetValue(0) * (a - center->GetValue(0)) + l1->GetValue(1) * (b - center->GetValue(1)) + l1->GetValue(2) * (c - center->GetValue(2));
+		b1 = l2->GetValue(0) * (a - center->GetValue(0)) + l2->GetValue(1) * (b - center->GetValue(1)) + l2->GetValue(2) * (c - center->GetValue(2));
+		c1 = l3->GetValue(0) * (a - center->GetValue(0)) + l3->GetValue(1) * (b - center->GetValue(1)) + l3->GetValue(2) * (c - center->GetValue(2));
+		outputFile << a1 << " " << b1 << " " << c1 << endl;
+	}
+
+	inFile.close();
 	outputFile.close();
 }
