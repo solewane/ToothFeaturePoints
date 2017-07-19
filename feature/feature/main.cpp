@@ -45,6 +45,11 @@ int main(int argc, char *argv[]) {
 		for (int i = 0; i < 28; ++i) {
 			model[i].outputToFilePFH(argv[2]);
 		}
+	} else if (string(argv[3]) == "0") {
+		#pragma omp parallel for
+		for (int i = 0; i < 28; ++i) {
+			model[i].outputToFilePos(argv[2]);
+		}
 	}
 
 	// cout << "All Finished." << endl;

@@ -63,6 +63,7 @@ public:
 	void getPFH(int i, vtkSmartPointer<vtkDoubleArray> &histogram);
 	void output();
 	void outputToFilePFH(string folderPath);
+	void outputToFilePos(string folderPath);
 };
 
 #endif

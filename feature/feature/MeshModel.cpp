@@ -163,3 +163,20 @@ void MeshModel::outputToFilePFH(string folderPath) {
 	}
 	outputFile.close();
 }
+
+void MeshModel::outputToFilePos(string folderPath) {
+	if (!isValid) {
+		return;
+	}
+
+	stringstream stream;
+	stream << folderPath << "\\" << (id / 7 + 1) << (id % 7 + 1) << ".txt";
+	ofstream outputFile(stream.str().c_str());
+	for (int i = 0; i < polydata->GetNumberOfPoints(); ++i) {
+		outputFile << xCor->GetValue(i) << " ";
+		outputFile << yCor->GetValue(i) << " ";
+		outputFile << zCor->GetValue(i) << " ";
+		outputFile << endl;
+	}
+	outputFile.close();
+}
