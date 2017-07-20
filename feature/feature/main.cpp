@@ -23,18 +23,12 @@ int main(int argc, char *argv[]) {
 	for (int i = 0; i < 28; ++i) {
 		model[i].readSTL(argv[1], i);
 	}
-
-	// 颌部主成分分析坐标轴
-	vtkSmartPointer<vtkDoubleArray> mainX = vtkSmartPointer<vtkDoubleArray>::New();
-	vtkSmartPointer<vtkDoubleArray> mainY = vtkSmartPointer<vtkDoubleArray>::New();
-	vtkSmartPointer<vtkDoubleArray> mainZ = vtkSmartPointer<vtkDoubleArray>::New();
-	getXYZ(model, mainX, mainY, mainZ);
 	
 	for (int i = 0; i < 28; ++i) {
 		model[i].update();
 	}
 
-	autoCheckPCA(model, mainX, mainY, mainZ);
+	autoCheckPCA(model);
 
 	for (int i = 0; i < 28; ++i) {
 		model[i].getNewCor();

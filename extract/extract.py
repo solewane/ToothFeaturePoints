@@ -4,12 +4,14 @@ import math
 # Define
 model_dir = 'E:\\data\\stl'
 file_dir = 'E:\\data\\feature_points'
+feature_dir = 'E:\\data\\pos_feature'
 tooth_id = '11'
 feature_id = 'center_distal'
 
 feature = tooth_id + '_' + feature_id
 output_dir = 'E:\\data\\' + feature
 output_dir_absolute = 'E:\\data\\' + feature + '\\absolute'
+feature_path = feature_dir + '\\' + feature + '.txt'
 
 # Extract certain feature from file
 file_list = os.listdir(file_dir)
@@ -35,6 +37,9 @@ for file_name in file_list:
 err_small = 0
 err_big = 0
 
+point_cloud = []
+center = []
+sigma3 = []
 for i in [0, 1, 2]:
     result_graph = []
     result_list = []
@@ -58,6 +63,7 @@ for i in [0, 1, 2]:
     print(result_graph)
     print('Min : ' + str(minCor))
     print('Max : ' + str(maxCor))
+    point_cloud.append(result_list)
 
     # Calcuate Gaussian Distribution
     n = len(result_list)
@@ -66,5 +72,19 @@ for i in [0, 1, 2]:
     for i in result_list:
         a += i * i
     sigma = math.sqrt(a / n - mu * mu)
+    sigma3.append(3 * sigma)
 
     print('Gussian Distribution Range : (' + str(mu - 3 * sigma) + ', ' + str(mu + 3 * sigma) + ')')
+
+
+n = len(point_cloud[0])
+for i in [0, 1, 2]:
+    center.append(sum(point_cloud[i]) / n)
+print('Center: (' + str(center[0]) + ', ' + str(center[1]) + ', ' + str(center[2]) + ')')
+print('3sigma: (' + str(sigma3[0]) + ', ' + str(sigma3[1]) + ', ' + str(sigma3[2]) + ')')
+
+outFile = open(feature_path, 'w')
+for i in [0, 1, 2]:
+    outFile.write(str(center[i]) + ' ')
+    outFile.write(str(sigma3[i]) + '\n')
+outFile.close()

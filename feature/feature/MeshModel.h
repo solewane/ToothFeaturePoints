@@ -56,7 +56,6 @@ public:
 
 public:
 	void readSTL(string folderPath, int id);
-	void setMainXYZ(vtkSmartPointer<vtkDoubleArray> &mainX, vtkSmartPointer<vtkDoubleArray> &mainY, vtkSmartPointer<vtkDoubleArray> &mainZ);
 	void update();
 	void getNormal();
 	void getNewCor();

@@ -204,6 +204,7 @@ void MeshModel::outputToFileNewCor(string inPath, string outPath) {
 		b1 = l2->GetValue(0) * (a - center->GetValue(0)) + l2->GetValue(1) * (b - center->GetValue(1)) + l2->GetValue(2) * (c - center->GetValue(2));
 		c1 = l3->GetValue(0) * (a - center->GetValue(0)) + l3->GetValue(1) * (b - center->GetValue(1)) + l3->GetValue(2) * (c - center->GetValue(2));
 		outputFile << a1 << " " << b1 << " " << c1 << endl;
+		break;
 	}
 
 	inFile.close();

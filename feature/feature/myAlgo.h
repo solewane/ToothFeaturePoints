@@ -22,14 +22,15 @@
 #include <vtkLine.h>
 #include <vtkCenterOfMass.h>
 
+#include <iostream>
+
 #include "MeshModel.h"
 
 class MeshModel;
 
 void getCenterOfMass(vtkSmartPointer<vtkPolyData> &polydata, vtkDoubleArray *center);
 void getXYZ(vtkSmartPointer<vtkPolyData> &polydata, vtkDoubleArray *x, vtkDoubleArray *y, vtkDoubleArray *z);
-void getXYZ(MeshModel m[28], vtkDoubleArray *x, vtkDoubleArray *y, vtkDoubleArray *z);
-void autoCheckPCA(MeshModel m[28], vtkSmartPointer<vtkDoubleArray> &mainX, vtkSmartPointer<vtkDoubleArray> &mainY, vtkSmartPointer<vtkDoubleArray> &mainZ);
+void autoCheckPCA(MeshModel m[28]);
 void getMatrix(vtkSmartPointer<vtkDoubleArray> &x, vtkSmartPointer<vtkDoubleArray> &y, vtkSmartPointer<vtkDoubleArray> &z, 
 	vtkSmartPointer<vtkDoubleArray> &l1, vtkSmartPointer<vtkDoubleArray> &l2, vtkSmartPointer<vtkDoubleArray> &l3);
 double getMaxLen(vtkSmartPointer<vtkSTLReader> &reader, vtkSmartPointer<vtkPolyData> &polydata);

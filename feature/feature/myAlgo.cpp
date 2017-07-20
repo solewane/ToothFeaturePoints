@@ -53,55 +53,19 @@ void getXYZ(vtkSmartPointer<vtkPolyData> &polydata, vtkDoubleArray *x, vtkDouble
 	pca->GetEigenvector(2, z);
 }
 
-void getXYZ(MeshModel m[28], vtkDoubleArray *x, vtkDoubleArray *y, vtkDoubleArray *z) {
-	// 获得数据集
-	vtkSmartPointer<vtkDoubleArray> datasetArrX = vtkSmartPointer<vtkDoubleArray>::New();
-	datasetArrX->SetNumberOfComponents(1);
-	datasetArrX->SetName("X");
-	vtkSmartPointer<vtkDoubleArray> datasetArrY = vtkSmartPointer<vtkDoubleArray>::New();
-	datasetArrY->SetNumberOfComponents(1);
-	datasetArrY->SetName("Y");
-	vtkSmartPointer<vtkDoubleArray> datasetArrZ = vtkSmartPointer<vtkDoubleArray>::New();
-	datasetArrZ->SetNumberOfComponents(1);
-	datasetArrZ->SetName("Z");
-	for (int i = 0; i < 28; ++i) {
-		if (!m[i].isValid) {
-			continue;
-		}
-		for (int j = 0; j < m[i].polydata->GetNumberOfPoints(); ++j) {
-			double p[3];
-			m[i].polydata->GetPoint(j, p);
-			datasetArrX->InsertNextValue(p[0]);
-			datasetArrY->InsertNextValue(p[1]);
-			datasetArrZ->InsertNextValue(p[2]);
-		}
-	}
-	vtkSmartPointer<vtkTable> datasetTable = vtkSmartPointer<vtkTable>::New();
-	datasetTable->AddColumn(datasetArrX);
-	datasetTable->AddColumn(datasetArrY);
-	datasetTable->AddColumn(datasetArrZ);
-
-	// PCA主成分分析
-	vtkSmartPointer<vtkPCAStatistics> pca = vtkSmartPointer<vtkPCAStatistics>::New();
-	pca->SetInputData(datasetTable);
-	pca->SetColumnStatus("X", 1 );
-	pca->SetColumnStatus("Y", 1 );
-	pca->SetColumnStatus("Z", 1 );
-	pca->RequestSelectedColumns();
-	pca->SetDeriveOption(true);
-	pca->Update();
-	vtkSmartPointer<vtkDoubleArray> eigenvalues = vtkSmartPointer<vtkDoubleArray>::New();
-	pca->GetEigenvector(0, x);
-	pca->GetEigenvector(1, y);
-	pca->GetEigenvector(2, z);
-}
-
 // 校准pca坐标轴方向
-void autoCheckPCA(MeshModel m[28], vtkSmartPointer<vtkDoubleArray> &mainX, vtkSmartPointer<vtkDoubleArray> &mainY, vtkSmartPointer<vtkDoubleArray> &mainZ) {
+void autoCheckPCA(MeshModel m[28]) {
 	// 上下颌 x轴均指向牙缝
-	double xArr[3] = { mainX->GetValue(0), mainX->GetValue(1), mainX->GetValue(2) };
-	double yArr[3] = { mainY->GetValue(0), mainY->GetValue(1), mainY->GetValue(2) };
-	double zArr[3] = { mainZ->GetValue(0), mainZ->GetValue(1), mainZ->GetValue(2) };
+	double yArr[3] = { m[4].center->GetValue(0) + m[11].center->GetValue(0) - m[0].center->GetValue(0) - m[7].center->GetValue(0), 
+		m[4].center->GetValue(1) + m[11].center->GetValue(1) - m[0].center->GetValue(1) - m[7].center->GetValue(1), 
+		m[4].center->GetValue(2) + m[11].center->GetValue(2) - m[0].center->GetValue(2) - m[7].center->GetValue(2) };
+	double zArr[3] = { m[0].center->GetValue(0) - m[14].center->GetValue(0), m[0].center->GetValue(1) - m[14].center->GetValue(1), m[0].center->GetValue(2) - m[14].center->GetValue(2) };
+	double normY = vtkMath::Norm(yArr);
+	double normZ = vtkMath::Norm(zArr);
+	for (int i = 0; i < 3; ++i) {
+		yArr[i] /= -normY;
+		zArr[i] /= normZ;
+	}
 	for (int i = 0; i < 28; ++i) {
 		if (!m[i].isValid) {
 			continue;
