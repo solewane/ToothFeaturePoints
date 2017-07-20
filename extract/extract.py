@@ -6,12 +6,14 @@ model_dir = 'E:\\data\\stl'
 file_dir = 'E:\\data\\feature_points'
 feature_dir = 'E:\\data\\pos_feature'
 tooth_id = '11'
-feature_id = 'center_distal'
+feature_id = 'distal'
 
 feature = tooth_id + '_' + feature_id
 output_dir = 'E:\\data\\' + feature
 output_dir_absolute = 'E:\\data\\' + feature + '\\absolute'
 feature_path = feature_dir + '\\' + feature + '.txt'
+
+os.makedirs(output_dir_absolute)
 
 # Extract certain feature from file
 file_list = os.listdir(file_dir)
