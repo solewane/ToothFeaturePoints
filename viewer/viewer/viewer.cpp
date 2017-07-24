@@ -16,9 +16,43 @@ viewer::viewer(QWidget *parent, Qt::WFlags flags) : QMainWindow(parent, flags) {
 	showHideLayout = new QHBoxLayout(this);
 	showAllBtn = new QPushButton(this);
 	hideAllBtn = new QPushButton(this);
+	getFiles(POS_FEATURE_PATH, filenames);
+	radioLayout = new QVBoxLayout(this);
+	scrollArea = new QScrollArea(this);
+	radioGroup = new QButtonGroup(this);
+	radioGroup->setExclusive(true);
+	scrollWidget = new QWidget(this);
+	scrollLayout = new QVBoxLayout(this);
+	radioMapper = new QSignalMapper(this);
+	QRadioButton *r = new QRadioButton(this);
+	r->setText("None");
+	connect(r, SIGNAL(clicked()), radioMapper, SLOT(map()));
+	radioMapper->setMapping(r, -1);
+	scrollLayout->addWidget(r);
+	radioGroup->addButton(r);
+	for (int i = 0; i < filenames.size(); ++i) {
+		QRadioButton *r = new QRadioButton(this);
+		r->setText(QString(filenames[i].c_str()));
+		connect(r, SIGNAL(clicked()), radioMapper, SLOT(map()));
+		radioMapper->setMapping(r, i);
+		scrollLayout->addWidget(r);
+		radioGroup->addButton(r);
+	}
+	connect(radioMapper, SIGNAL(mapped(const int)), this, SLOT(showValidRange(int)));
+	scrollWidget->setLayout(scrollLayout);
+	scrollArea->setWidget(scrollWidget);
+	radioLayout->addWidget(scrollArea);
+	isGened = false;
+	genFeatureBtn = new QPushButton(this);
+	showPointBtn = new QPushButton(this);
+	outputLabel = new QLabel(this);
+	genLayout = new QHBoxLayout(this);
 
 	showAllBtn->setText("Show All");
 	hideAllBtn->setText("Hide All");
+	genFeatureBtn->setText("Generate");
+	showPointBtn->setText("Show Feature Points");
+	outputLabel->setText("Unready");
 
 	mainLayout->addWidget(vtkWidget);
 	mainLayout->addLayout(rightLayout);
@@ -37,16 +71,22 @@ viewer::viewer(QWidget *parent, Qt::WFlags flags) : QMainWindow(parent, flags) {
 	showHideLayout->addWidget(showAllBtn);
 	showHideLayout->addWidget(hideAllBtn);
 	rightLayout->addLayout(showHideLayout);
+	rightLayout->addLayout(radioLayout);
+	genLayout->addWidget(genFeatureBtn);
+	genLayout->addWidget(outputLabel);
+	rightLayout->addLayout(genLayout);
+	rightLayout->addWidget(showPointBtn);
 
 	vtkWidget->setFixedSize(800, 600);
 
 	this->setCentralWidget(mainWidget);
 
-	
 	connect(showAllBtn, SIGNAL(clicked()), this, SLOT(showAllTeeth()));
 	connect(hideAllBtn, SIGNAL(clicked()), this, SLOT(hideAllTeeth()));
 	connect(showAllBtn, SIGNAL(clicked()), vtkWidget, SLOT(showAllTeeth()));
 	connect(hideAllBtn, SIGNAL(clicked()), vtkWidget, SLOT(hideAllTeeth()));
+	connect(this, SIGNAL(showCertainRange(string)), vtkWidget, SLOT(showRange(string)));
+	connect(genFeatureBtn, SIGNAL(clicked()), this, SLOT(generateFeature()));
 }
 
 viewer::~viewer() { }
@@ -61,4 +101,35 @@ void viewer::hideAllTeeth() {
 	for (int i = 0; i < 28; ++i) {
 		checkbox[i]->setChecked(false);
 	}
+}
+
+void viewer::showValidRange(int id) {
+	if (id == -1) {
+		emit showCertainRange("");
+	}
+	emit showCertainRange(filenames[id]);
+}
+
+void viewer::getFiles(string path, vector<string>& files) {
+	long hFile = 0;
+	struct _finddata_t fileinfo;
+	string p;
+	if((hFile = _findfirst(p.assign(path).append("\\*").c_str(),&fileinfo)) != -1) {
+		do {
+			if((fileinfo.attrib &  _A_SUBDIR)) {
+				if(strcmp(fileinfo.name,".") != 0  &&  strcmp(fileinfo.name,"..") != 0)
+					getFiles(p.assign(path).append("\\").append(fileinfo.name), files);
+			} else {
+				string tmp = fileinfo.name;
+				files.push_back(tmp.substr(0, tmp.find(".txt")));
+			}
+		} while(_findnext(hFile, &fileinfo) == 0);
+		_findclose(hFile);
+	}
+}
+
+void viewer::generateFeature() {
+	string process = EXE_PATH + string(" ") + MODEL_PATH + string(" ") + TMP_PATH + string(" 1\npause\n");
+	system(process.c_str());
+	outputLabel->setText("Ready");
 }

@@ -7,12 +7,24 @@
 #include <QCheckBox>
 #include <QSignalMapper>
 #include <QPushButton>
+#include <QRadioButton>
+#include <QButtonGroup>
+#include <QScrollArea>
+#include <QLabel>
 
 #include <QtGui/QMainWindow>
+
+#include <string>
+#include <vector>
+#include <io.h>
 
 #include "VtkWidget.h"
 
 #include "ui_viewer.h"
+
+#include "utility.h"
+
+using namespace std;
 
 class viewer : public QMainWindow
 {
@@ -23,6 +35,7 @@ public:
 	~viewer();
 
 private:
+	vector<string> filenames;
 	QWidget *mainWidget;
 	QHBoxLayout *mainLayout;
 	VtkWidget *vtkWidget;
@@ -33,6 +46,17 @@ private:
 	QPushButton *showAllBtn;
 	QPushButton *hideAllBtn;
 	QSignalMapper *mapper;
+	QVBoxLayout *radioLayout;
+	QScrollArea *scrollArea;
+	QWidget *scrollWidget;
+	QVBoxLayout *scrollLayout;
+	QButtonGroup *radioGroup;
+	QSignalMapper *radioMapper;
+	QPushButton *genFeatureBtn;
+	QPushButton *showPointBtn;
+	QLabel *outputLabel;
+	QHBoxLayout *genLayout;
+	bool isGened;
 
 private:
 	Ui::viewerClass ui;
@@ -40,6 +64,14 @@ private:
 public slots:
 	void showAllTeeth();
 	void hideAllTeeth();
+	void showValidRange(int id);
+	void generateFeature();
+
+private:
+	void getFiles(string path, vector<string>& files);
+
+signals:
+	void showCertainRange(string);
 };
 
 #endif // VIEWER_H

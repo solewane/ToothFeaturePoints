@@ -3,6 +3,11 @@ An algorithm to get feature points from a mesh model
 
 ## Usage
 
+### Viewer
+viewer.exe
+
+settings in Utility.h
+
 ### Generate Feature
 feature.exe input_folder_path output_folder_path argument [tooth_id fp_file_path]
 
@@ -29,6 +34,11 @@ files:
 - predict.txt : output the predict
 
 ## Compilation Environment
+
+### Viewer
+- Visual Studio 2010
+- Qt 4.8.0
+- VTK 6.1.0
 
 ### Feature
 - Visual Studio 2010
