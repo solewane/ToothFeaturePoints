@@ -31,9 +31,6 @@ for file_name in file_list:
 # print(xml_file)
 
 for feature in feature_list:
-    if feature[0] != '1':
-        break
-
     output_dir = 'E:\\data\\' + feature
     feature_path = feature_dir + '\\' + feature + '.txt'
      # Get Distribution Graph
@@ -69,6 +66,12 @@ for feature in feature_list:
         for j in point_cloud:
             if (j[i] - avg > -0.2) and (j[i] - avg < 0.2):
                 result_list.append(j[i])
+        
+        if feature == '34_center_distal':
+            result_list = []
+            for j in point_cloud:
+                if j[i] > 0.7 and j[i] < 1:
+                    result_list.append(j[i])
 
         # Calcuate Gaussian Distribution
         n = len(result_list)
@@ -83,7 +86,7 @@ for feature in feature_list:
         
     # print('Center: (' + str(center[0]) + ', ' + str(center[1]) + ', ' + str(center[2]) + ')')
     # print('3sigma: (' + str(sigma3[0]) + ', ' + str(sigma3[1]) + ', ' + str(sigma3[2]) + ')')
-    print(feature + ':  (' + str(center[0]) + '+-' + str(sigma3[0]) + ') (' + str(center[1]) + '+-' + str(sigma3[1]) + ') (' + str(center[1]) + '+-' + str(sigma3[1]) + ')')
+    print(feature + ':  (' + str(center[0]) + '+-' + str(sigma3[0]) + ') (' + str(center[1]) + '+-' + str(sigma3[1]) + ') (' + str(center[2]) + '+-' + str(sigma3[2]) + ')')
     outFile = open(feature_path, 'w')
     for i in [0, 1, 2]:
         outFile.write(str(center[i]) + ' ')

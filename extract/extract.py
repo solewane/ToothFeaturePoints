@@ -32,9 +32,6 @@ for file_name in file_list:
 print(feature_list)
 
 for feature in feature_list:
-    if feature[0:2] in ['11', '12', '13', '15', '16']:
-        continue
-    
     output_dir = 'E:\\data\\' + feature
     output_dir_absolute = 'E:\\data\\' + feature + '\\absolute'
     feature_path = feature_dir + '\\' + feature + '.txt'
