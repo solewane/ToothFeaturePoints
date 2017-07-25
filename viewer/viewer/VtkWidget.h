@@ -47,6 +47,10 @@ private:
 	vtkSmartPointer<vtkDoubleArray> yCor[28];
 	vtkSmartPointer<vtkDoubleArray> zCor[28];
 
+	double xCorMin, xCorMax;
+	double yCorMin, yCorMax;
+	double zCorMin, zCorMax;
+
 	vtkSmartPointer<vtkDoubleArray> massCenter[28];
 
 private:

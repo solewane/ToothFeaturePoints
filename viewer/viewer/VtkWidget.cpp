@@ -99,21 +99,29 @@ void VtkWidget::showRange(string filename) {
 		return;
 	}
 
-	for (int i = 0; i < polydata[id]->GetNumberOfPoints(); ++i) {
-		double p[3];
-		polydata[id]->GetPoint(i, p);
-		double corP[3] = { xCor[id]->GetValue(i), yCor[id]->GetValue(i), zCor[id]->GetValue(i) };
-		if ((corP[0] - cen[0]) * (corP[0] - cen[0]) / (r[0] * r[0]) + (corP[1] - cen[1]) * (corP[1] - cen[1]) / (r[1] * r[1]) + (corP[2] - cen[2]) * (corP[2] - cen[2]) / (r[2] * r[2]) < 1) {
-			vtkSmartPointer<vtkSphereSource> pointSource = vtkSmartPointer<vtkSphereSource>::New();
-			pointSource->SetCenter(p[0], p[1], p[2]);
-			pointSource->SetRadius(.5);
-			vtkSmartPointer<vtkPolyDataMapper> pointMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-			pointMapper->SetInputConnection(pointSource->GetOutputPort());
-			vtkSmartPointer<vtkActor> pointActor = vtkSmartPointer<vtkActor>::New();
-			pointActor->SetMapper(pointMapper);
-			pointActor->GetProperty()->SetColor(255, 0, 0);
-			renderer->AddActor(pointActor);
+	double rate = 1.0;
+	bool isFound = false;
+	while (!isFound) {
+		for (int i = 0; i < polydata[id]->GetNumberOfPoints(); ++i) {
+			double p[3];
+			polydata[id]->GetPoint(i, p);
+			double corP[3] = { xCor[id]->GetValue(i), yCor[id]->GetValue(i), zCor[id]->GetValue(i) };
+			double corQ[3] = { (corP[0] - xCorMin) / (xCorMax - xCorMin), (corP[1] - yCorMin) / (yCorMax - yCorMin), (corP[2] - zCorMin) / (zCorMax - zCorMin) };
+
+			if (corQ[0] > cen[0] - r[0] * rate && corQ[0] < cen[0] + r[0] * rate && corQ[1] > cen[1] - r[1] * rate && corQ[1] < cen[1] + r[1] * rate && corQ[2] > cen[2] - r[2] * rate && corQ[2] < cen[2] + r[2] * rate) {
+				isFound = true;
+				vtkSmartPointer<vtkSphereSource> pointSource = vtkSmartPointer<vtkSphereSource>::New();
+				pointSource->SetCenter(p[0], p[1], p[2]);
+				pointSource->SetRadius(.5);
+				vtkSmartPointer<vtkPolyDataMapper> pointMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+				pointMapper->SetInputConnection(pointSource->GetOutputPort());
+				vtkSmartPointer<vtkActor> pointActor = vtkSmartPointer<vtkActor>::New();
+				pointActor->SetMapper(pointMapper);
+				pointActor->GetProperty()->SetColor(255, 0, 0);
+				renderer->AddActor(pointActor);
+			}
 		}
+		rate = rate * 1.2;
 	}
 	this->GetRenderWindow()->Render();
 }
@@ -159,6 +167,27 @@ void VtkWidget::getNewCor(int id) {
 		double a = l1->GetValue(0) * (p[0] - massCenter[id]->GetValue(0)) + l1->GetValue(1) * (p[1] - massCenter[id]->GetValue(1)) + l1->GetValue(2) * (p[2] - massCenter[id]->GetValue(2));
 		double b = l2->GetValue(0) * (p[0] - massCenter[id]->GetValue(0)) + l2->GetValue(1) * (p[1] - massCenter[id]->GetValue(1)) + l2->GetValue(2) * (p[2] - massCenter[id]->GetValue(2));
 		double c = l3->GetValue(0) * (p[0] - massCenter[id]->GetValue(0)) + l3->GetValue(1) * (p[1] - massCenter[id]->GetValue(1)) + l3->GetValue(2) * (p[2] - massCenter[id]->GetValue(2));
+
+		if (a < xCorMin || xCorMin == 0) {
+			xCorMin = a;
+		}
+		if (a > xCorMax || xCorMax == 0) {
+			xCorMax = a;
+		}
+
+		if (b < yCorMin || yCorMin == 0) {
+			yCorMin = b;
+		}
+		if (b > yCorMax || yCorMax == 0) {
+			yCorMax = b;
+		}
+
+		if (c < zCorMin || zCorMin == 0) {
+			zCorMin = c;
+		}
+		if (c > zCorMax || zCorMax == 0) {
+			zCorMax = c;
+		}
 
 		xCor[id]->InsertNextValue(a);
 		yCor[id]->InsertNextValue(b);

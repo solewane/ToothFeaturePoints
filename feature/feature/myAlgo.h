@@ -26,6 +26,8 @@
 
 #include "MeshModel.h"
 
+#define MATRIX_PATH "E:\\data\\matrices\\"
+
 class MeshModel;
 
 void getCenterOfMass(vtkSmartPointer<vtkPolyData> &polydata, vtkDoubleArray *center);

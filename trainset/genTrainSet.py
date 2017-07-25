@@ -1,11 +1,17 @@
 import os
 
 # Define
-model_dir = 'E:\\data\\stl'
-train_dir = "E:\\trainset"
+feature_dir = 'E:\\data\\feature_points'
 
-file_list = os.listdir(model_dir)
+file_list = os.listdir(feature_dir)
+feature_list = []
 
-for single_file in file_list:
-    os.makedirs(train_dir + '\\' + single_file)
-    os.system('..\\execute\\feature.exe ' + model_dir + '\\' + single_file + '\\teeth_stl ' + train_dir + '\\' + single_file + '\\ 1')
+for file_name in file_list:
+    with open(feature_dir + '\\' + file_name, 'r') as inFile:
+        file_lines = inFile.readlines()
+    for single_line in file_lines:
+        end_pos = single_line.find(':')
+        tmp = single_line[0:end_pos]
+        if tmp not in feature_list:
+            feature_list.append(tmp)
+print(feature_list)

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FeatureTemplate>
+    <PointsLib>
+        <FeatureCategory name="Maxillar Feature Points">
+            <Point attached_model_name="17.stl" name="17_lingual_distal_cusp" is_marked="0" chinese_name="17远中舌尖">
+            </Point>
+            <Point attached_model_name="17.stl" name="17_lingual_mesial_cusp" is_marked="0" chinese_name="17近中舌尖">
+            </Point>
+            <Point attached_model_name="17.stl" name="17_fossa" is_marked="0" chinese_name="17中央窝">
+            </Point>
+            <Point attached_model_name="16.stl" name="16_lingual_distal_cusp" is_marked="0" chinese_name="16远中舌尖">
+            </Point>
+            <Point attached_model_name="16.stl" name="16_lingual_mesial_cusp" is_marked="0" chinese_name="16近中舌尖">
+            </Point>
+            <Point attached_model_name="16.stl" name="16_fossa" is_marked="0" chinese_name="16中央窝">
+            </Point>
+            <Point attached_model_name="15.stl" name="15_fossa" is_marked="0" chinese_name="15中央窝">
+            </Point>
+            <Point attached_model_name="14.stl" name="14_fossa" is_marked="0" chinese_name="14中央窝">
+            </Point>		
+			<Point attached_model_name="13.stl" name="13_cusp" is_marked="0" chinese_name="13牙尖">
+            </Point>
+            <Point attached_model_name="12.stl" name="12_cusp" is_marked="0" chinese_name="12切缘中点">
+            </Point>
+			<Point attached_model_name="11.stl" name="11_incisal" is_marked="0" chinese_name="11切缘中点">
+            </Point>
+            <Point attached_model_name="27.stl" name="27_lingual_distal_cusp" is_marked="0" chinese_name="27远中舌尖">
+            </Point>
+            <Point attached_model_name="27.stl" name="27_lingual_mesial_cusp" is_marked="0" chinese_name="27近中舌尖">
+            </Point>
+            <Point attached_model_name="27.stl" name="27_fossa" is_marked="0" chinese_name="27中央窝">
+            </Point>
+            <Point attached_model_name="26.stl" name="26_lingual_distal_cusp" is_marked="0" chinese_name="26远中舌尖">
+            </Point>
+            <Point attached_model_name="26.stl" name="26_lingual_mesial_cusp" is_marked="0" chinese_name="26近中舌尖">
+            </Point>
+            <Point attached_model_name="26.stl" name="26_fossa" is_marked="0" chinese_name="26中央窝">
+            </Point>
+            <Point attached_model_name="25.stl" name="25_fossa" is_marked="0" chinese_name="25中央窝">
+            </Point>
+           	<Point attached_model_name="24.stl" name="24_fossa" is_marked="0" chinese_name="24中央窝">
+            </Point>
+			<Point attached_model_name="23.stl" name="23_cusp" is_marked="0" chinese_name="23牙尖">
+            </Point>
+            <Point attached_model_name="22.stl" name="22_cusp" is_marked="0" chinese_name="22切缘中点">
+            </Point>
+			<Point attached_model_name="21.stl" name="21_incisal" is_marked="0" chinese_name="21切缘中点">
+            </Point>
+        </FeatureCategory>
+        <FeatureCategory name="Mandibular Feature Points">
+            <Point attached_model_name="47.stl" name="47_buccal_distal_cusp" is_marked="0" chinese_name="47远中颊尖">
+            </Point>
+            <Point attached_model_name="47.stl" name="47_buccal_mesial_cusp" is_marked="0" chinese_name="47近中颊尖">
+            </Point>
+            <Point attached_model_name="47.stl" name="47_fossa" is_marked="0" chinese_name="47中央窝">
+            </Point>
+            <Point attached_model_name="46.stl" name="46_buccal_distal_cusp" is_marked="0" chinese_name="46远中颊尖">
+            </Point>
+            <Point attached_model_name="46.stl" name="46_buccal_mesial_cusp" is_marked="0" chinese_name="46近中颊尖">
+            </Point>
+            <Point attached_model_name="46.stl" name="46_fossa" is_marked="0" chinese_name="46中央窝">
+            </Point>
+            <Point attached_model_name="45.stl" name="45_cusp" is_marked="0" chinese_name="45颊尖">
+            </Point>
+            <Point attached_model_name="44.stl" name="44_cusp" is_marked="0" chinese_name="44颊尖">
+            </Point>
+			<Point attached_model_name="43.stl" name="43_cusp" is_marked="0" chinese_name="43牙尖">
+            </Point>
+            <Point attached_model_name="42.stl" name="42_cusp" is_marked="0" chinese_name="42切缘中点">
+            </Point>
+			<Point attached_model_name="41.stl" name="41_incisal" is_marked="0" chinese_name="41切缘中点">
+            </Point>
+            <Point attached_model_name="37.stl" name="37_buccal_distal_cusp" is_marked="0" chinese_name="37远中颊尖">
+            </Point>
+            <Point attached_model_name="37.stl" name="37_buccal_mesial_cusp" is_marked="0" chinese_name="37近中颊尖">
+            </Point>
+            <Point attached_model_name="37.stl" name="37_fossa" is_marked="0" chinese_name="37中央窝">
+            </Point>
+            <Point attached_model_name="36.stl" name="36_buccal_distal_cusp" is_marked="0" chinese_name="36远中颊尖">
+            </Point>
+            <Point attached_model_name="36.stl" name="36_buccal_mesial_cusp" is_marked="0" chinese_name="36近中颊尖">
+            </Point>
+            <Point attached_model_name="36.stl" name="36_fossa" is_marked="0" chinese_name="36中央窝">
+            </Point>
+            <Point attached_model_name="35.stl" name="35_cusp" is_marked="0" chinese_name="35颊尖">
+            </Point>
+			<Point attached_model_name="34.stl" name="34_cusp" is_marked="0" chinese_name="34颊尖">
+            </Point>
+			<Point attached_model_name="33.stl" name="33_cusp" is_marked="0" chinese_name="33牙尖">
+            </Point>		
+            <Point attached_model_name="32.stl" name="32_cusp" is_marked="0" chinese_name="32切缘中点">
+            </Point>
+			<Point attached_model_name="31.stl" name="31_incisal" is_marked="0" chinese_name="31切缘中点">
+            </Point>
+        </FeatureCategory>
+
+		<FeatureCategory name="Maxillar Mesial Distal Points">
+			<Point attached_model_name="17.stl" name="17_center_distal" is_marked="0" chinese_name="17远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="17.stl" name="17_center_mesial" is_marked="0" chinese_name="17近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="16.stl" name="16_center_distal" is_marked="0" chinese_name="16远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="16.stl" name="16_center_mesial" is_marked="0" chinese_name="16近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="15.stl" name="15_center_distal" is_marked="0" chinese_name="15远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="15.stl" name="15_center_mesial" is_marked="0" chinese_name="15近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="14.stl" name="14_center_distal" is_marked="0" chinese_name="14远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="14.stl" name="14_center_mesial" is_marked="0" chinese_name="14近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="13.stl" name="13_center_distal" is_marked="0" chinese_name="13远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="13.stl" name="13_center_mesial" is_marked="0" chinese_name="13近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="12.stl" name="12_center_distal" is_marked="0" chinese_name="12远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="12.stl" name="12_center_mesial" is_marked="0" chinese_name="12近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="11.stl" name="11_center_distal" is_marked="0" chinese_name="11远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="11.stl" name="11_center_mesial" is_marked="0" chinese_name="11近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="27.stl" name="27_center_distal" is_marked="0" chinese_name="27远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="27.stl" name="27_center_mesial" is_marked="0" chinese_name="27近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="26.stl" name="26_center_distal" is_marked="0" chinese_name="26远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="26.stl" name="26_center_mesial" is_marked="0" chinese_name="26近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="25.stl" name="25_center_distal" is_marked="0" chinese_name="25远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="25.stl" name="25_center_mesial" is_marked="0" chinese_name="25近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="24.stl" name="24_center_distal" is_marked="0" chinese_name="24远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="24.stl" name="24_center_mesial" is_marked="0" chinese_name="24近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="23.stl" name="23_center_distal" is_marked="0" chinese_name="23远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="23.stl" name="23_center_mesial" is_marked="0" chinese_name="23近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="22.stl" name="22_center_distal" is_marked="0" chinese_name="22远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="22.stl" name="22_center_mesial" is_marked="0" chinese_name="22近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="21.stl" name="21_center_distal" is_marked="0" chinese_name="21远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="21.stl" name="21_center_mesial" is_marked="0" chinese_name="21近中边缘嵴中点">
+            </Point>
+		</FeatureCategory>
+
+		<FeatureCategory name="Mandibular Mesial Distal Points">
+			<Point attached_model_name="47.stl" name="47_center_distal" is_marked="0" chinese_name="47远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="47.stl" name="47_center_mesial" is_marked="0" chinese_name="47近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="46.stl" name="46_center_distal" is_marked="0" chinese_name="46远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="46.stl" name="46_center_mesial" is_marked="0" chinese_name="46近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="45.stl" name="45_center_distal" is_marked="0" chinese_name="45远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="45.stl" name="45_center_mesial" is_marked="0" chinese_name="45近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="44.stl" name="44_center_distal" is_marked="0" chinese_name="44远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="44.stl" name="44_center_mesial" is_marked="0" chinese_name="44近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="43.stl" name="43_center_distal" is_marked="0" chinese_name="43远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="43.stl" name="43_center_mesial" is_marked="0" chinese_name="43近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="42.stl" name="42_center_distal" is_marked="0" chinese_name="42远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="42.stl" name="42_center_mesial" is_marked="0" chinese_name="42近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="41.stl" name="41_center_distal" is_marked="0" chinese_name="41远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="41.stl" name="41_center_mesial" is_marked="0" chinese_name="41近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="37.stl" name="37_center_distal" is_marked="0" chinese_name="37远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="37.stl" name="37_center_mesial" is_marked="0" chinese_name="37近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="36.stl" name="36_center_distal" is_marked="0" chinese_name="36远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="36.stl" name="36_center_mesial" is_marked="0" chinese_name="36近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="35.stl" name="35_center_distal" is_marked="0" chinese_name="35远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="35.stl" name="35_center_mesial" is_marked="0" chinese_name="35近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="34.stl" name="34_center_distal" is_marked="0" chinese_name="34远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="34.stl" name="34_center_mesial" is_marked="0" chinese_name="34近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="33.stl" name="33_center_distal" is_marked="0" chinese_name="33远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="33.stl" name="33_center_mesial" is_marked="0" chinese_name="33近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="32.stl" name="32_center_distal" is_marked="0" chinese_name="32远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="32.stl" name="32_center_mesial" is_marked="0" chinese_name="32近中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="31.stl" name="31_center_distal" is_marked="0" chinese_name="31远中边缘嵴中点">
+            </Point>
+			<Point attached_model_name="31.stl" name="31_center_mesial" is_marked="0" chinese_name="31近中边缘嵴中点">
+            </Point>
+		</FeatureCategory>
+
+		<FeatureCategory name="Skull Points">
+			<Point attached_model_name="skull.stl" name="left_eye_point" is_marked="0" chinese_name="左侧眶点">
+            </Point>
+			<Point attached_model_name="skull.stl" name="right_eye_point" is_marked="0" chinese_name="右侧眶点">
+            </Point>
+			<Point attached_model_name="skull.stl" name="left_ear_point" is_marked="0" chinese_name="左侧耳点">
+            </Point>
+			<Point attached_model_name="skull.stl" name="right_ear_point" is_marked="0" chinese_name="右侧耳点">
+            </Point>
+			<Point attached_model_name="skull.stl" name="nose_point" is_marked="0" chinese_name="鼻根点">
+            </Point>
+			<Point attached_model_name="skull.stl" name="spine_along_point" is_marked="0" chinese_name="颅底点">
+            </Point>
+		</FeatureCategory>
+		
+    </PointsLib>
+</FeatureTemplate>

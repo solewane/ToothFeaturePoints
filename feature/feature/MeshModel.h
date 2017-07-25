@@ -6,6 +6,9 @@
 #include <vtkSmartPointer.h>
 #include <vtkDoubleArray.h>
 #include <vtkMath.h>
+#include <vtkMatrix4x4.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
 
 #include <iostream>
 #include <fstream>

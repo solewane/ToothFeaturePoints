@@ -24,6 +24,9 @@ void pfh(vtkSmartPointer<vtkPolyData> &polydata, int i, int d, int r, vtkSmartPo
 	q.push(originP);
 	vec.push_back(i);
 	while (true) {
+		if (q.size() == 0) {
+			break;
+		}
 		Pair t = q.front();
 		q.pop();
 		if (t.step > r)	{

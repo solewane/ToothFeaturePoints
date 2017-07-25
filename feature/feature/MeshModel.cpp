@@ -39,7 +39,48 @@ void MeshModel::readSTL(string folderPath, int id) {
 	reader->SetFileName(stream.str().c_str());
 	reader->Update();
 
-	polydata->DeepCopy(reader->GetOutput());
+	string matrix_path = MATRIX_PATH;
+	matrix_path.append("matrix_");
+	int start_pos = folderPath.find("stl\\");
+	int end_pos = folderPath.find("\\teeth");
+	matrix_path.append(folderPath.substr(start_pos + 4, end_pos - start_pos - 4));
+	matrix_path.append(".txt");
+	ifstream matrixFile(matrix_path.c_str());
+	vtkSmartPointer<vtkMatrix4x4> m = vtkSmartPointer<vtkMatrix4x4>::New();
+	m->Identity();
+	if (!matrixFile) {
+		cout << "Matrix file error!";
+		return;
+	}
+	while (!matrixFile.eof()) {
+		double tmp[16];
+		string m_id;
+		matrixFile >> m_id;
+		if (matrixFile.eof()) {
+			break;
+		}
+		for (int i = 0; i < 16; ++i) {
+			matrixFile >> tmp[i];
+		}
+		if (m_id.at(0) == ('0' + id / 7 + 1) && m_id.at(1) == ('0' + id % 7 + 1)) {
+			for (int i = 0; i < 16; ++i) {
+				m->SetElement(i / 4, i % 4, tmp[i]);
+			}
+		}
+	}
+	matrixFile.close();
+	vtkSmartPointer<vtkTransform> transform =
+		vtkSmartPointer<vtkTransform>::New();
+	transform->SetMatrix(m);
+	transform->Update();
+
+	vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter =
+		vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+	transformFilter->SetTransform(transform);
+	transformFilter->SetInputData(reader->GetOutput());
+	transformFilter->Update();
+	
+	polydata->DeepCopy(transformFilter->GetOutput());
 }
 
 // 更新网格模型各项数值
@@ -100,7 +141,6 @@ void MeshModel::getNewCor() {
 	for (int i = 0; i < polydata->GetNumberOfPoints(); ++i) {
 		double p[3];
 		polydata->GetPoint(i, p);
-
 		double a = l1->GetValue(0) * (p[0] - center->GetValue(0)) + l1->GetValue(1) * (p[1] - center->GetValue(1)) + l1->GetValue(2) * (p[2] - center->GetValue(2));
 		double b = l2->GetValue(0) * (p[0] - center->GetValue(0)) + l2->GetValue(1) * (p[1] - center->GetValue(1)) + l2->GetValue(2) * (p[2] - center->GetValue(2));
 		double c = l3->GetValue(0) * (p[0] - center->GetValue(0)) + l3->GetValue(1) * (p[1] - center->GetValue(1)) + l3->GetValue(2) * (p[2] - center->GetValue(2));
@@ -200,10 +240,16 @@ void MeshModel::outputToFileNewCor(string inPath, string outPath) {
 
 	while (!inFile.eof()) {
 		inFile >> a >> b >> c >> d;
+		// cout << a << " " << b << " " << c << " " << endl;
+
 		a1 = l1->GetValue(0) * (a - center->GetValue(0)) + l1->GetValue(1) * (b - center->GetValue(1)) + l1->GetValue(2) * (c - center->GetValue(2));
 		b1 = l2->GetValue(0) * (a - center->GetValue(0)) + l2->GetValue(1) * (b - center->GetValue(1)) + l2->GetValue(2) * (c - center->GetValue(2));
 		c1 = l3->GetValue(0) * (a - center->GetValue(0)) + l3->GetValue(1) * (b - center->GetValue(1)) + l3->GetValue(2) * (c - center->GetValue(2));
-		outputFile << a1 << " " << b1 << " " << c1 << endl;
+
+		// cout << xCorMin << " " << xCorMax << endl << yCorMin << " " << yCorMax << endl << zCorMin << " " << zCorMax << endl;
+		// cout << a1 << "\t" << b1 << "\t" << c1 << endl;
+
+		outputFile << (a1 - xCorMin) / (xCorMax - xCorMin) << " " << (b1 - yCorMin) / (yCorMax - yCorMin) << " " << (c1 - zCorMin) / (zCorMax - zCorMin) << endl;
 		break;
 	}
 
