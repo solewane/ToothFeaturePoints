@@ -37,9 +37,9 @@ int main(int argc, char *argv[]) {
 	// cout << "Data Prepare finished." << endl;
 
 	if (string(argv[3]) == "1") {
-		//#pragma omp parallel for
+		#pragma omp parallel for
 		for (int i = 0; i < 28; ++i) {
-			model[i].outputToFilePFH(argv[2]);
+			model[i].outputToFilePFH(argv[1], argv[2]);
 		}
 	} else if (string(argv[3]) == "0") {
 		#pragma omp parallel for

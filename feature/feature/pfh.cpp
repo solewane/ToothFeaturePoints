@@ -46,6 +46,17 @@ void pfh(vtkSmartPointer<vtkPolyData> &polydata, int i, int d, int r, vtkSmartPo
 				nearest->InsertNextId(pointIdList->GetId(1));
 			}
 		}
+		// Delete the Duplicate
+		vector<int> tmpVec;
+		for (int j = 0; j < nearest->GetNumberOfIds(); ++j) {
+			if (find(tmpVec.begin(), tmpVec.end(), nearest->GetId(j)) == tmpVec.end()) {
+				tmpVec.push_back(nearest->GetId(j));
+			}
+		}
+		nearest->Reset();
+		for (int j = 0; j < tmpVec.size(); ++j) {
+			nearest->InsertNextId(tmpVec[j]);
+		}
 		// Add the neighbors to the queue
 		for (int j = 0; j < nearest->GetNumberOfIds(); ++j)	{
 			if (find(vec.begin(), vec.end(), nearest->GetId(j)) != vec.end()) {

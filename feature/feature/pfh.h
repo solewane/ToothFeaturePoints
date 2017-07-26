@@ -29,6 +29,7 @@
 
 #include <queue>
 #include <vector>
+#include <algorithm>
 
 #define PI 3.1415926536
 

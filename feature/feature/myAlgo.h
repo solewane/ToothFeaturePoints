@@ -27,6 +27,8 @@
 #include "MeshModel.h"
 
 #define MATRIX_PATH "E:\\data\\matrices\\"
+#define FEATURE_PATH "E:\\data\\feature_points\\"
+#define RANGE_PATH "E:\\data\\pos_feature\\"
 
 class MeshModel;
 

@@ -185,11 +185,11 @@ void MeshModel::output() {
 	cout << endl;
 }
 
-void MeshModel::outputToFilePFH(string folderPath) {
+void MeshModel::outputToFilePFH(string inPath, string folderPath) {
 	if (!isValid) {
 		return;
 	}
-
+	/*
 	stringstream stream;
 	stream << folderPath << "\\" << (id / 7 + 1) << (id % 7 + 1) << ".txt";
 	ofstream outputFile(stream.str().c_str());
@@ -201,7 +201,51 @@ void MeshModel::outputToFilePFH(string folderPath) {
 		}
 		outputFile << endl;
 	}
-	outputFile.close();
+	outputFile.close();*/
+	
+	string m_id = inPath.substr(inPath.find("stl\\") + 4, inPath.find("\\teeth") - inPath.find("stl\\") - 4);
+	// Get Features
+	vector<string> files;
+	getFiles(RANGE_PATH, files);
+	for (int i = 0; i < files.size(); ++i) {
+		string featureName = files[i];
+		// Get Feature Points
+		vector<int> exactPoints;
+		vector<int> nearPoints;
+		bool isFound = getFeaturePoints(m_id, featureName, exactPoints, nearPoints);
+		if (!isFound) {
+			continue;
+		}
+		// Get Points in Range
+		vector<int> rangePoints;
+		int rangeNum = getRangePoints(featureName, rangePoints);
+		// Output PFH
+		string outPath = folderPath;
+		outPath.append("\\");
+		outPath.append(featureName);
+		outPath.append(".txt");
+		ofstream outFile(outPath, ios::app);
+		for (int j = 0; j < rangeNum; ++j) {
+			// Calculate Weight
+			double w = 0;
+			if (find(nearPoints.begin(), nearPoints.end(), rangePoints[j]) != nearPoints.end()) {
+				w = 0.5;
+			}
+			if (exactPoints[0] == rangePoints[j]) {
+				w = 1;
+			}
+			// Get PFH
+			vtkSmartPointer<vtkDoubleArray> histogram = vtkSmartPointer<vtkDoubleArray>::New();
+			getPFH(rangePoints[j], histogram);
+			// Output
+			outFile << w << " ";
+			for (int k = 0; k < histogram->GetNumberOfTuples(); ++k) {
+				outFile << histogram->GetValue(k) << " ";
+			}
+			outFile << endl;
+		}
+		outFile.close();
+	}
 }
 
 void MeshModel::outputToFilePos(string folderPath) {
@@ -219,6 +263,109 @@ void MeshModel::outputToFilePos(string folderPath) {
 		outputFile << endl;
 	}
 	outputFile.close();
+}
+
+bool MeshModel::getFeaturePoints(string m_id, string feature, vector<int> &exactPoints, vector<int> &nearPoints) {
+	string featurePath = FEATURE_PATH;
+	featurePath.append(m_id);
+	featurePath.append(".txt");
+	ifstream inFile(featurePath);
+	char tmp[200];
+	double p[3];
+	bool isFound = false;
+	while (inFile.getline(tmp, 200)) {
+		if (string(tmp).find(feature) == 0) {
+			string line(tmp);
+			istringstream iss(line.substr(line.find(": ") + 2));
+			for (int i = 0; i < 2; ++i) {
+				iss >> p[i];
+				string comma;
+				iss >> comma;
+			}
+			iss >> p[2];
+			isFound = true;
+			break;
+		}
+	}
+	inFile.close();
+	if (!isFound) {
+		return false;
+	}
+	double minDis = -1;
+	int currPoint = -1;
+	// Exact Points
+	for (int i = 0; i < polydata->GetNumberOfPoints(); ++i) {
+		double q[3];
+		polydata->GetPoint(i, q);
+		if (minDis < 0 || vtkMath::Distance2BetweenPoints(p, q) < minDis) {
+			minDis = vtkMath::Distance2BetweenPoints(p, q);
+			currPoint = i;
+		}
+	}
+	exactPoints.push_back(currPoint);
+	// Near Points
+	vtkSmartPointer<vtkIdList> neighborCells = vtkSmartPointer<vtkIdList>::New();
+	polydata->GetPointCells(currPoint, neighborCells);
+	int numCells = neighborCells->GetNumberOfIds();
+	for (int j = 0; j < numCells; ++j)	{
+		vtkSmartPointer<vtkIdList> pointIdList = vtkSmartPointer<vtkIdList>::New();
+		polydata->GetCellPoints(neighborCells->GetId(j), pointIdList);
+		if (pointIdList->GetId(0) != currPoint) {
+			if (find(nearPoints.begin(), nearPoints.end(), pointIdList->GetId(0)) == nearPoints.end()) {
+				nearPoints.push_back(pointIdList->GetId(0));
+			}
+		} else {
+			if (find(nearPoints.begin(), nearPoints.end(), pointIdList->GetId(1)) == nearPoints.end()) {
+				nearPoints.push_back(pointIdList->GetId(1));
+			}
+		}
+	}
+	return true;
+}
+
+int MeshModel::getRangePoints(string feature, vector<int> &rangePoints) {
+	string filePath = RANGE_PATH;
+	filePath.append(feature);
+	filePath.append(".txt");
+	ifstream inFile(filePath);
+	double mu[3];
+	double r[3];
+	for (int i = 0; i < 3; ++i) {
+		inFile >> mu[i];
+		inFile >> r[i];
+	}
+	for (int i = 0; i < polydata->GetNumberOfPoints(); ++i) {
+		double p[3];
+		p[0] = (xCor->GetValue(i) - xCorMin) / (xCorMax - xCorMin);
+		p[1] = (yCor->GetValue(i) - yCorMin) / (yCorMax - yCorMin);
+		p[2] = (zCor->GetValue(i) - zCorMin) / (zCorMax - zCorMin);
+		double rate = 1.0;
+		if ((p[0] > mu[0] - r[0] * rate) && (p[0] < mu[0] + r[0] * rate) && (p[1] > mu[1] - r[1] * rate) && (p[1] < mu[1] + r[1] * rate) && (p[2] > mu[2] - r[2] * rate) && (p[2] < mu[2] + r[2] * rate)) {
+			rangePoints.push_back(i);
+		}
+	}
+	inFile.close();
+	return rangePoints.size();
+}
+
+void MeshModel::getFiles(string path, vector<string>& files) {
+	long hFile = 0;
+	struct _finddata_t fileinfo;
+	string p;
+	if((hFile = _findfirst(p.assign(path).append("\\*").c_str(),&fileinfo)) != -1) {
+		do {
+			if((fileinfo.attrib &  _A_SUBDIR)) {
+				if(strcmp(fileinfo.name,".") != 0  &&  strcmp(fileinfo.name,"..") != 0)
+					getFiles(p.assign(path).append("\\").append(fileinfo.name), files);
+			} else {
+				string tmp = fileinfo.name;
+				if ((tmp.at(0) - '1') * 7 + (tmp.at(1) - '1') == id) {
+					files.push_back(tmp.substr(0, tmp.find(".txt")));
+				}
+			}
+		} while(_findnext(hFile, &fileinfo) == 0);
+		_findclose(hFile);
+	}
 }
 
 void MeshModel::outputToFileNewCor(string inPath, string outPath) {

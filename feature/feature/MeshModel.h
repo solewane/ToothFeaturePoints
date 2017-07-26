@@ -14,6 +14,9 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <io.h>
+#include <vector>
+#include <algorithm>
 
 #include "myAlgo.h"
 #include "pfh.h"
@@ -64,9 +67,12 @@ public:
 	void getNewCor();
 	void getPFH(int i, vtkSmartPointer<vtkDoubleArray> &histogram);
 	void output();
-	void outputToFilePFH(string folderPath);
+	void outputToFilePFH(string inPath, string folderPath);
 	void outputToFilePos(string folderPath);
 	void outputToFileNewCor(string inPath, string outPath);
+	bool getFeaturePoints(string m_id, string feature, vector<int> &exactPoints, vector<int> &nearPoints);
+	int getRangePoints(string feature, vector<int> &rangePoints);
+	void getFiles(string path, vector<string>& files);
 };
 
 #endif
