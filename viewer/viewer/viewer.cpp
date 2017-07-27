@@ -42,6 +42,16 @@ viewer::viewer(QWidget *parent, Qt::WFlags flags) : QMainWindow(parent, flags) {
 	scrollWidget->setLayout(scrollLayout);
 	scrollArea->setWidget(scrollWidget);
 	radioLayout->addWidget(scrollArea);
+	featureLayout = new QVBoxLayout(this);
+	featureMapper = new QSignalMapper(this);
+	for (int i = 0; i < 5; ++i) {
+		featureCheckbox[i] = new QCheckBox(this);
+		featureLayout->addWidget(featureCheckbox[i]);
+		connect(featureCheckbox[i], SIGNAL(clicked()), featureMapper, SLOT(map()));
+		featureMapper->setMapping(featureCheckbox[i], i);
+		featureCheckbox[i]->setChecked(true);
+	}
+	connect(featureMapper, SIGNAL(mapped(const int)), vtkWidget, SLOT(modifyFeature(int)));
 	isGened = false;
 	genFeatureBtn = new QPushButton(this);
 	showPointBtn = new QPushButton(this);
@@ -53,6 +63,11 @@ viewer::viewer(QWidget *parent, Qt::WFlags flags) : QMainWindow(parent, flags) {
 	genFeatureBtn->setText("Generate");
 	showPointBtn->setText("Show Feature Points");
 	outputLabel->setText("Unready");
+	featureCheckbox[0]->setText("distal");
+	featureCheckbox[1]->setText("mesial");
+	featureCheckbox[2]->setText("fossa");
+	featureCheckbox[3]->setText("incisal");
+	featureCheckbox[4]->setText("cusp");
 
 	mainLayout->addWidget(vtkWidget);
 	mainLayout->addLayout(rightLayout);
@@ -72,12 +87,15 @@ viewer::viewer(QWidget *parent, Qt::WFlags flags) : QMainWindow(parent, flags) {
 	showHideLayout->addWidget(hideAllBtn);
 	rightLayout->addLayout(showHideLayout);
 	rightLayout->addLayout(radioLayout);
+	rightLayout->addLayout(featureLayout);
 	genLayout->addWidget(genFeatureBtn);
 	genLayout->addWidget(outputLabel);
 	rightLayout->addLayout(genLayout);
 	rightLayout->addWidget(showPointBtn);
 
-	vtkWidget->setFixedSize(800, 600);
+	vtkWidget->setMinimumSize(800, 600);
+	mainLayout->setStretchFactor(vtkWidget, 3);
+	mainLayout->setStretchFactor(rightLayout, 1);
 
 	this->setCentralWidget(mainWidget);
 
@@ -87,6 +105,9 @@ viewer::viewer(QWidget *parent, Qt::WFlags flags) : QMainWindow(parent, flags) {
 	connect(hideAllBtn, SIGNAL(clicked()), vtkWidget, SLOT(hideAllTeeth()));
 	connect(this, SIGNAL(showCertainRange(string)), vtkWidget, SLOT(showRange(string)));
 	connect(genFeatureBtn, SIGNAL(clicked()), this, SLOT(generateFeature()));
+	connect(this, SIGNAL(vtkGenFeature()), vtkWidget, SLOT(genFeature()));
+	connect(showPointBtn, SIGNAL(clicked()), vtkWidget, SLOT(showhideFeature()));
+	genFeatureBtn->setEnabled(false);
 }
 
 viewer::~viewer() { }
@@ -129,7 +150,6 @@ void viewer::getFiles(string path, vector<string>& files) {
 }
 
 void viewer::generateFeature() {
-	string process = EXE_PATH + string(" ") + MODEL_PATH + string(" ") + TMP_PATH + string(" 1\npause\n");
-	system(process.c_str());
+	emit vtkGenFeature();
 	outputLabel->setText("Ready");
 }

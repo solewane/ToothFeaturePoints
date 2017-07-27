@@ -52,6 +52,9 @@ private:
 	QVBoxLayout *scrollLayout;
 	QButtonGroup *radioGroup;
 	QSignalMapper *radioMapper;
+	QCheckBox *featureCheckbox[5];
+	QVBoxLayout *featureLayout;
+	QSignalMapper *featureMapper;
 	QPushButton *genFeatureBtn;
 	QPushButton *showPointBtn;
 	QLabel *outputLabel;
@@ -72,6 +75,7 @@ private:
 
 signals:
 	void showCertainRange(string);
+	void vtkGenFeature();
 };
 
 #endif // VIEWER_H

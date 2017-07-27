@@ -3,7 +3,6 @@
 
 #define POS_FEATURE_PATH "E:\\data\\pos_feature"
 #define MODEL_PATH "E:\\train\\"
-#define EXE_PATH "..\\..\\execute\\feature.exe"
 #define TMP_PATH "E:\\tmp\\"
 
 #include <vtkPolyData.h>
@@ -13,6 +12,9 @@
 #include <vtkTable.h>
 #include <vtkMath.h>
 #include <vtkCenterOfMass.h>
+#include <vtkSTLReader.h>
+#include <vtkExtractEdges.h>
+#include <vtkLine.h>
 
 void getXYZ(vtkSmartPointer<vtkPolyData> &polydata, vtkDoubleArray *x, vtkDoubleArray *y, vtkDoubleArray *z);
 void autoCheckPCA(vtkSmartPointer<vtkPolyData> polydata[28], vtkSmartPointer<vtkDoubleArray> center[28], bool isValid[28], 
@@ -20,5 +22,6 @@ void autoCheckPCA(vtkSmartPointer<vtkPolyData> polydata[28], vtkSmartPointer<vtk
 void getCenterOfMass(vtkSmartPointer<vtkPolyData> &polydata, vtkDoubleArray *center);
 void getMatrix(vtkSmartPointer<vtkDoubleArray> &x, vtkSmartPointer<vtkDoubleArray> &y, vtkSmartPointer<vtkDoubleArray> &z, 
 	vtkSmartPointer<vtkDoubleArray> &l1, vtkSmartPointer<vtkDoubleArray> &l2, vtkSmartPointer<vtkDoubleArray> &l3);
+double getMaxLen(vtkSmartPointer<vtkSTLReader> &reader, vtkSmartPointer<vtkPolyData> &polydata);
 
 #endif

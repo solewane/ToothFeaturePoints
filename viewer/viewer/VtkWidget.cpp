@@ -4,6 +4,15 @@ VtkWidget::VtkWidget(QWidget *parent) {
 	QString base = MODEL_PATH;
 	renderer = vtkSmartPointer<vtkRenderer>::New();
 	renderer->SetBackground(.6, .6, .6);
+	isShowFeature = false;
+	showFeatureList[0] = "distal";
+	showFeatureList[1] = "mesial";
+	showFeatureList[2] = "fossa";
+	showFeatureList[3] = "incisal";
+	showFeatureList[4] = "cusp";
+	for (int i = 0; i < 5; ++i) {
+		showFeature[i] = true;
+	}
 
 	// Draw Mesh
 	for (int i = 0; i < 4; ++i) {
@@ -50,6 +59,8 @@ VtkWidget::VtkWidget(QWidget *parent) {
 		yCor[i] = vtkSmartPointer<vtkDoubleArray>::New();
 		zCor[i] = vtkSmartPointer<vtkDoubleArray>::New();
 
+		xCorMin[i] = xCorMax[i] = yCorMin[i] = yCorMax[i] = zCorMin[i] = zCorMax[i] = 0;
+
 		massCenter[i] = vtkSmartPointer<vtkDoubleArray>::New();
 
 		getCenterOfMass(polydata[i], massCenter[i]);
@@ -59,15 +70,173 @@ VtkWidget::VtkWidget(QWidget *parent) {
 	for (int i = 0; i < 28; ++i) {
 		getNewCor(i);
 	}
+	for (int i = 0; i < 28; ++i) {
+		normalX[i] = vtkSmartPointer<vtkDoubleArray>::New();
+		normalY[i] = vtkSmartPointer<vtkDoubleArray>::New();
+		normalZ[i] = vtkSmartPointer<vtkDoubleArray>::New();
+		maxLen[i] = 0;
+		getNormal(i);
+		maxLen[i] = getMaxLen(reader[i], polydata[i]);
+	}
 }
 
 VtkWidget::~VtkWidget() { }
+
+void VtkWidget::getNormal(int i) {
+	vtkSmartPointer<vtkPolyDataNormals> normalGenerator = vtkSmartPointer<vtkPolyDataNormals>::New();
+	normalGenerator->SetInputData(polydata[i]);
+	normalGenerator->ComputePointNormalsOn();
+	normalGenerator->ComputeCellNormalsOff();
+	normalGenerator->Update();
+	vtkSmartPointer<vtkPolyData> polydataWithNormal = normalGenerator->GetOutput();
+	vtkDataArray* normalsGeneric = polydataWithNormal->GetPointData()->GetNormals();
+
+	int numPoints = polydata[i]->GetNumberOfPoints();
+	normalX[i]->Reset();
+	normalY[i]->Reset();
+	normalZ[i]->Reset();
+	for (int j = 0; j < numPoints; ++j)	{
+		double vtkGenericNormal[3];
+		normalsGeneric->GetTuple(j, vtkGenericNormal);
+
+		normalX[i]->InsertNextValue(vtkGenericNormal[0]);
+		normalY[i]->InsertNextValue(vtkGenericNormal[1]);
+		normalZ[i]->InsertNextValue(vtkGenericNormal[2]);
+	}
+}
 
 void VtkWidget::refreshVisible() {
 	renderer->RemoveAllViewProps();
 	for (int i = 0; i < 28; ++i) {
 		if (isVisible[i]) {
 			renderer->AddActor(actor[i]);
+		}
+	}
+	if (isShowFeature) {
+		vector<string> featureNames;
+		getFiles(POS_FEATURE_PATH, featureNames);
+		for (int i = 0; i < featureNames.size(); ++i) {
+			bool isInShowList = false;
+			for (int j = 0; j < 5; ++j) {
+				if (showFeature[j] && featureNames[i].find(showFeatureList[j]) != string::npos) {
+					isInShowList = true;
+				}
+			}
+			if (!isInShowList) {
+				continue;
+			}
+			int id = (featureNames[i].at(0) - '1') * 7 + (featureNames[i].at(1) - '1');
+			if (isValid[id] && isVisible[id]) {
+				string path = TMP_PATH + featureNames[i] + string("_out.txt");
+				ifstream inFile(path.c_str());
+				int max_p_id = -1;
+				vector<int> p_id;
+				vector<double> front_poss;
+				vector<double> last_poss;
+				vector<double> possibility;
+				double max_poss = 0;
+
+				double minTmp = 1, maxTmp = -1;
+				while (!inFile.eof()) {
+					int tmpId;
+					double tmpPoss;
+					inFile >> tmpId;
+					if (inFile.eof()) {
+						break;
+					}
+					inFile >> tmpPoss;
+					p_id.push_back(tmpId);
+					last_poss.push_back(tmpPoss);
+					if (tmpPoss > maxTmp) {
+						maxTmp = tmpPoss;
+					}
+					if (tmpPoss < minTmp) {
+						minTmp = tmpPoss;
+					}
+				}
+				inFile.close();
+
+				int n = p_id.size();
+				for (int j = 0; j < n; ++j) {
+					if (maxTmp == minTmp) {
+						last_poss[j] = 1;
+					}
+					last_poss[j] = (last_poss[j] - minTmp) / (maxTmp - minTmp);
+					// last_poss[j] = 1;
+				}
+
+				string featureName = featureNames[i];
+				double mu = 0, x = 0, xWTF = 0;
+				double sigma = 0;
+				double t = 0.0001;
+				bool useGaussian = false;
+
+				// [1, 2, 3, 4][1, 2, 3]_center_[distal, mesial]
+				if ((featureName.at(1) - '1') < 3 && (featureName.find("distal") != -1 || featureName.find("mesial") != -1)) {
+					useGaussian = true;
+					
+					if (featureName.find("distal") != -1) {
+						if (featureName.at(0) == '1' || featureName.at(0) == '3') {
+							mu = zCorMax[id];
+						} else {
+							mu = zCorMin[id];
+						}
+					} else {
+						if (featureName.at(0) == '1' || featureName.at(0) == '3') {
+							mu = zCorMin[id];
+						} else {
+							mu = zCorMax[id];
+						}
+					}
+					xWTF = (zCorMin[id] + zCorMax[id]) / 2;
+				}
+
+				// [1, 2, 3, 4][1_incisal, 2_cusp]
+				if ((featureName.at(1) == '1' && featureName.find("incisal") != -1) || (featureName.at(1) == '2' && featureName.find("cusp") != -1)) {
+					mu = (zCorMin[id] + zCorMax[id]) / 2;
+					xWTF = max(zCorMax[id], zCorMin[id]);
+				}
+
+				// [1, 2, 3, 4][3_cusp]
+				if (featureName.at(1) == '2' && featureName.find("cusp") != -1) {
+					mu = xCorMax[id];
+					xWTF = (xCorMax[id] + xCorMin[id]) / 2;
+				}
+
+				sigma = abs(xWTF - mu) / sqrt(2 * log(1 / t));
+
+				for (int j = 0; j < n; ++j) {
+					double frontTmp = 1;
+					x = zCor[id]->GetValue(p_id[j]);
+					if (useGaussian) {
+						frontTmp = exp(0 - ((x - mu) * (x - mu)) / (2 * sigma * sigma));
+					}
+					front_poss.push_back(frontTmp);
+				}
+
+				for (int j = 0; j < n; ++j) {
+					double possTmp = front_poss[j] * last_poss[j];
+					possibility.push_back(possTmp);
+					if (max_poss == 0 || possTmp > max_poss) {
+						max_poss = possTmp;
+						max_p_id = p_id[j];
+					}
+				}
+				
+				double p[3];
+				polydata[id]->GetPoint(max_p_id, p);
+
+				vtkSmartPointer<vtkSphereSource> pointSource = vtkSmartPointer<vtkSphereSource>::New();
+				pointSource->SetCenter(p[0], p[1], p[2]);
+				pointSource->SetRadius(.5);
+				vtkSmartPointer<vtkPolyDataMapper> pointMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+				pointMapper->SetInputConnection(pointSource->GetOutputPort());
+				vtkSmartPointer<vtkActor> pointActor = vtkSmartPointer<vtkActor>::New();
+				pointActor->SetMapper(pointMapper);
+				pointActor->GetProperty()->SetColor(255, 0, 0);
+				renderer->AddActor(pointActor);
+				
+			}
 		}
 	}
 	this->GetRenderWindow()->Render();
@@ -106,9 +275,11 @@ void VtkWidget::showRange(string filename) {
 			double p[3];
 			polydata[id]->GetPoint(i, p);
 			double corP[3] = { xCor[id]->GetValue(i), yCor[id]->GetValue(i), zCor[id]->GetValue(i) };
-			double corQ[3] = { (corP[0] - xCorMin) / (xCorMax - xCorMin), (corP[1] - yCorMin) / (yCorMax - yCorMin), (corP[2] - zCorMin) / (zCorMax - zCorMin) };
-
-			if (corQ[0] > cen[0] - r[0] * rate && corQ[0] < cen[0] + r[0] * rate && corQ[1] > cen[1] - r[1] * rate && corQ[1] < cen[1] + r[1] * rate && corQ[2] > cen[2] - r[2] * rate && corQ[2] < cen[2] + r[2] * rate) {
+			double corQ[3] = { (corP[0] - xCorMin[id]) / (xCorMax[id] - xCorMin[id]), (corP[1] - yCorMin[id]) / (yCorMax[id] - yCorMin[id]), (corP[2] - zCorMin[id]) / (zCorMax[id] - zCorMin[id]) };
+			double a = (corQ[0] - cen[0]) * (corQ[0] - cen[0]) / (r[0] * r[0] * rate * rate);
+			double b = (corQ[1] - cen[1]) * (corQ[1] - cen[1]) / (r[1] * r[1] * rate * rate);
+			double c = (corQ[2] - cen[2]) * (corQ[2] - cen[2]) / (r[2] * r[2] * rate * rate);
+			if (a + b + c < 1) {
 				isFound = true;
 				vtkSmartPointer<vtkSphereSource> pointSource = vtkSmartPointer<vtkSphereSource>::New();
 				pointSource->SetCenter(p[0], p[1], p[2]);
@@ -168,29 +339,133 @@ void VtkWidget::getNewCor(int id) {
 		double b = l2->GetValue(0) * (p[0] - massCenter[id]->GetValue(0)) + l2->GetValue(1) * (p[1] - massCenter[id]->GetValue(1)) + l2->GetValue(2) * (p[2] - massCenter[id]->GetValue(2));
 		double c = l3->GetValue(0) * (p[0] - massCenter[id]->GetValue(0)) + l3->GetValue(1) * (p[1] - massCenter[id]->GetValue(1)) + l3->GetValue(2) * (p[2] - massCenter[id]->GetValue(2));
 
-		if (a < xCorMin || xCorMin == 0) {
-			xCorMin = a;
+		if (a < xCorMin[id] || xCorMin[id] == 0) {
+			xCorMin[id] = a;
 		}
-		if (a > xCorMax || xCorMax == 0) {
-			xCorMax = a;
-		}
-
-		if (b < yCorMin || yCorMin == 0) {
-			yCorMin = b;
-		}
-		if (b > yCorMax || yCorMax == 0) {
-			yCorMax = b;
+		if (a > xCorMax[id] || xCorMax[id] == 0) {
+			xCorMax[id] = a;
 		}
 
-		if (c < zCorMin || zCorMin == 0) {
-			zCorMin = c;
+		if (b < yCorMin[id] || yCorMin[id] == 0) {
+			yCorMin[id] = b;
 		}
-		if (c > zCorMax || zCorMax == 0) {
-			zCorMax = c;
+		if (b > yCorMax[id] || yCorMax[id] == 0) {
+			yCorMax[id] = b;
+		}
+
+		if (c < zCorMin[id] || zCorMin[id] == 0) {
+			zCorMin[id] = c;
+		}
+		if (c > zCorMax[id] || zCorMax[id] == 0) {
+			zCorMax[id] = c;
 		}
 
 		xCor[id]->InsertNextValue(a);
 		yCor[id]->InsertNextValue(b);
 		zCor[id]->InsertNextValue(c);
 	}
+}
+
+void VtkWidget::genFeature() {
+	vector<string> featureNames;
+	getFiles(POS_FEATURE_PATH, featureNames);
+	#pragma omp parallel for
+	for (int i = 0; i < featureNames.size(); ++i) {
+		int id = (featureNames[i].at(0) - '1') * 7 + (featureNames[i].at(1) - '1');
+		if (isValid[id]) {
+			double cen[3];
+			double r[3];
+
+			string path = POS_FEATURE_PATH + string("\\") + featureNames[i] + string(".txt");
+			ifstream inFile(path.c_str());
+			for (int j = 0; j < 3; ++j) {
+				inFile >> cen[j];
+				inFile >> r[j];
+			}
+			inFile.close();
+
+			bool isFound = false;
+			double rate = 1.0;
+			vector<int> validPoints;
+			while (!isFound) {
+				for (int j = 0; j < polydata[id]->GetNumberOfPoints(); ++j) {
+					double p[3];
+					polydata[id]->GetPoint(j, p);
+					double corP[3] = { xCor[id]->GetValue(j), yCor[id]->GetValue(j), zCor[id]->GetValue(j) };
+					double corQ[3] = { (corP[0] - xCorMin[id]) / (xCorMax[id] - xCorMin[id]), (corP[1] - yCorMin[id]) / (yCorMax[id] - yCorMin[id]), (corP[2] - zCorMin[id]) / (zCorMax[id] - zCorMin[id]) };
+					double a = (corQ[0] - cen[0]) * (corQ[0] - cen[0]) / (r[0] * r[0] * rate * rate);
+					double b = (corQ[1] - cen[1]) * (corQ[1] - cen[1]) / (r[1] * r[1] * rate * rate);
+					double c = (corQ[2] - cen[2]) * (corQ[2] - cen[2]) / (r[2] * r[2] * rate * rate);
+					if (a + b + c < 1) {
+						isFound = true;
+						validPoints.push_back(j);
+					}
+				}
+				rate = rate * 1.2;
+			}
+			string outPath = TMP_PATH + featureNames[i] + ".txt";
+			ofstream outFile(outPath);
+			for (int j = 0; j < validPoints.size(); ++j) {
+				outFile << validPoints[j] << " ";
+				vtkSmartPointer<vtkDoubleArray> histogram = vtkSmartPointer<vtkDoubleArray>::New();
+				getPFH(id, validPoints[j], histogram);
+				for (int k = 0; k < histogram->GetNumberOfTuples(); ++k) {
+					outFile << histogram->GetValue(k) << " ";
+				}
+				outFile << endl;
+			}
+			outFile.close();
+		}
+	}
+	#pragma omp parallel for
+	for (int i = 0; i < featureNames.size(); ++i) {
+		int id = (featureNames[i].at(0) - '1') * 7 + (featureNames[i].at(1) - '1');
+		if (isValid[id]) {
+			string command = string("python ..\\..\\train\\predict.py ") + TMP_PATH + featureNames[i] + string(".txt ") + featureNames[i] + string(" ") + TMP_PATH;
+			WinExec(command.c_str(), SW_HIDE);
+		}
+	}
+}
+
+void VtkWidget::getFiles(string path, vector<string>& files) {
+	long hFile = 0;
+	struct _finddata_t fileinfo;
+	string p;
+	if((hFile = _findfirst(p.assign(path).append("\\*").c_str(),&fileinfo)) != -1) {
+		do {
+			if((fileinfo.attrib &  _A_SUBDIR)) {
+				if(strcmp(fileinfo.name,".") != 0  &&  strcmp(fileinfo.name,"..") != 0)
+					getFiles(p.assign(path).append("\\").append(fileinfo.name), files);
+			} else {
+				string tmp = fileinfo.name;
+				files.push_back(tmp.substr(0, tmp.find(".txt")));
+			}
+		} while(_findnext(hFile, &fileinfo) == 0);
+		_findclose(hFile);
+	}
+}
+
+void VtkWidget::getPFH(int i, int j, vtkSmartPointer<vtkDoubleArray> &histogram) {
+	histogram->Reset();
+	int rb = 3;
+	int rd = 3;
+	pfh(polydata[i], j, rd, rb, histogram, normalX[i], normalY[i], normalZ[i], maxLen[i]);
+}
+
+void VtkWidget::showhideFeature() {
+	if (isShowFeature) {
+		isShowFeature = false;
+	} else {
+		isShowFeature = true;
+	}
+	refreshVisible();
+}
+
+void VtkWidget::modifyFeature(int id) {
+	if (showFeature[id]) {
+		showFeature[id] = false;
+	} else {
+		showFeature[id] = true;
+	}
+	refreshVisible();
 }

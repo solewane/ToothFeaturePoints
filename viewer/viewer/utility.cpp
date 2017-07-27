@@ -183,3 +183,25 @@ void getMatrix(vtkSmartPointer<vtkDoubleArray> &x, vtkSmartPointer<vtkDoubleArra
 		l3->InsertNextValue((x->GetValue(2) * y->GetValue(0) - x->GetValue(0) * y->GetValue(2)) / r); // b1a3 - a1b3
 		l3->InsertNextValue((x->GetValue(0) * y->GetValue(1) - x->GetValue(1) * y->GetValue(0)) / r); // a1b2 - b1a2
 }
+
+double getMaxLen(vtkSmartPointer<vtkSTLReader> &reader, vtkSmartPointer<vtkPolyData> &polydata) {
+	double maxLen = 0;
+	vtkSmartPointer<vtkExtractEdges> extractEdges = vtkSmartPointer<vtkExtractEdges>::New();
+	extractEdges->SetInputConnection(reader->GetOutputPort());
+	extractEdges->Update();
+	for(int k = 0; k < extractEdges->GetOutput()->GetNumberOfCells(); ++k) {
+		vtkSmartPointer<vtkLine> line = vtkLine::SafeDownCast(extractEdges->GetOutput()->GetCell(k));
+		int id1 = line->GetPointId(0);
+		int id2 = line->GetPointId(1);
+		double p1[3];
+		double p2[3];
+		polydata->GetPoint(id1, p1);
+		polydata->GetPoint(id2, p2);
+		double len = vtkMath::Distance2BetweenPoints(p1, p2);
+		if (len > maxLen || maxLen == 0) {
+			maxLen = len;
+		}
+	}
+	maxLen = sqrt(maxLen);
+	return maxLen;
+}

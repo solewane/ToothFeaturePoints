@@ -3,57 +3,80 @@ Written by TangRenjie in 2017.7
 
 Usage:
 python svr.py
-files:
-train_in.txt & train_out.txt : train set
-data.txt : data set
-predict.txt : output the predict
-put these file in the same foldier
 '''
 
 import time
 import numpy as np
+import pickle
+import os
 from sklearn.svm import SVR
 
-# Input
-X = []
-with open('train_in.txt', 'r') as inFile:
-    file_list = inFile.readlines()
-for i in file_list:
-    X.append(list(map(eval, i.rstrip('\n').split(' '))))
+# Define
 
-y = []
-with open('train_out.txt', 'r') as inFile:
-    file_list = inFile.readlines()
-y = list(map(eval, file_list))
+feature_list = []
+file_list = os.listdir('E:\\data\\feature_points')
 
-z = []
-with open('data.txt', 'r') as inFile:
-    file_list = inFile.readlines()
-for i in file_list:
-    z.append(list(map(eval, i.rstrip('\n').split(' '))))
+xml_file = []
+with open('..\\extract\\all.xml', 'r', encoding='UTF-8') as inFile:
+    lines = inFile.readlines()
+for single_line in lines:
+    start_pos = single_line.find('\" name=\"') + 8
+    end_pos = single_line.find('\" is')
+    if start_pos != -1 and end_pos != -1:
+        xml_file.append(single_line[start_pos:end_pos])
 
-# SVR
-svr = SVR(kernel = "linear", C = 1.0, epsilon = 0.01)
+for file_name in file_list:
+    with open('E:\\data\\feature_points\\' + file_name, 'r') as inFile:
+        file_lines = inFile.readlines()
+    for single_line in file_lines:
+        end_pos = single_line.find(':')
+        tmp = single_line[0:end_pos]
+        if (tmp not in feature_list) and (tmp in xml_file):
+            feature_list.append(tmp)
 
-t0 = time.time()
+# print(xml_file)
+print(feature_list)
 
-svr.fit(X, y)
+for feature in feature_list:
+    print(feature)
 
-train_time = time.time() - t0
+    file_path = 'E:\\trainset'
 
-print("Train Finished. Time: %d s" % train_time)
+    feature_path = file_path + '\\' + feature + '.txt'
 
-#predict
-t0 = time.time()
+    # Input and Output
+    X = []
+    y = []
+    w = []
+    a = 0
+    b = 0
+    c = 0
+    with open(feature_path, 'r') as inFile:
+        file_list = inFile.readlines()
+    for i in file_list:
+        dataList = list(map(eval, i.rstrip('\n').rstrip(' ').split(' ')))
+        y.append(dataList[0])
+        if dataList[0] == 1:
+            w.append(1000)
+        else:
+            if dataList[0] == 0.5:
+                w.append(100)
+            else:
+                w.append(1)
+        X.append(dataList[1:])
 
-predict_result = svr.predict(z)
+    print('Read complete.')
 
-predict_time = time.time() - t0
+    # SVR
+    svr = SVR(kernel='rbf', C=1e3, gamma=1)
 
-print("Predict Finished. Time: %d s" % predict_time)
+    t0 = time.time()
 
-#output
-output = open('predict.txt', 'w')
-for i in predict_result:
-    output.write(str(i) + "\n")
-output.close()
+    svr.fit(X, y, sample_weight = w)
+
+    train_time = time.time() - t0
+
+    print("Train Finished. Time: %d s" % train_time)
+
+    with open(feature + '.dat', 'wb') as f:
+        pickle.dump(svr, f)
