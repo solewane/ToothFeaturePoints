@@ -162,18 +162,18 @@ void VtkWidget::refreshVisible() {
 						last_poss[j] = 1;
 					}
 					last_poss[j] = (last_poss[j] - minTmp) / (maxTmp - minTmp);
-					// last_poss[j] = 1;
+					//last_poss[j] = 1;
 				}
 
 				string featureName = featureNames[i];
-				double mu = 0, x = 0, xWTF = 0;
+				double mu = 0, x = 0, z = 0, xWTF = 0;
 				double sigma = 0;
-				double t = 0.0001;
-				bool useGaussian = false;
+				double t = 0.000001;
+				int useGaussian = 0; // 1 - use Z 2 - use X
 
 				// [1, 2, 3, 4][1, 2, 3]_center_[distal, mesial]
 				if ((featureName.at(1) - '1') < 3 && (featureName.find("distal") != -1 || featureName.find("mesial") != -1)) {
-					useGaussian = true;
+					useGaussian = 1;
 					
 					if (featureName.find("distal") != -1) {
 						if (featureName.at(0) == '1' || featureName.at(0) == '3') {
@@ -193,23 +193,127 @@ void VtkWidget::refreshVisible() {
 
 				// [1, 2, 3, 4][1_incisal, 2_cusp]
 				if ((featureName.at(1) == '1' && featureName.find("incisal") != -1) || (featureName.at(1) == '2' && featureName.find("cusp") != -1)) {
+					useGaussian = 1;
 					mu = (zCorMin[id] + zCorMax[id]) / 2;
 					xWTF = max(zCorMax[id], zCorMin[id]);
 				}
 
 				// [1, 2, 3, 4][3_cusp]
 				if (featureName.at(1) == '2' && featureName.find("cusp") != -1) {
+					useGaussian = 2;
 					mu = xCorMax[id];
 					xWTF = (xCorMax[id] + xCorMin[id]) / 2;
+				}
+
+				bool useBuccalDistalRange = false;
+				double buccalDistalZMin = 0;
+				double buccalDistalZMax = 0;
+				if ((featureName.at(1) == '6' || featureName.at(1) == '7') && featureName.find("cusp") != -1) {
+					useGaussian = 2;
+					mu = xCorMax[id];
+					xWTF = (xCorMax[id] + xCorMin[id]) / 2;
+				}
+				if (featureName.at(1) == '6' && featureName.find("distal_cusp") != -1) {
+					useBuccalDistalRange = true;
+					double step = (zCorMax - zCorMin) / 10;
+					vector<double> mountain;
+					double currY = yCorMin[id];
+					double currX = 0;
+					if (featureName.at(0) == '1' || featureName.at(0) == '3') {
+						currX = zCorMin[id];
+					} else {
+						currX = zCorMax[id];
+					}
+					double hMax = 0;
+					double hMin = 0;
+					while (currX >= zCorMin[id] && currX <= zCorMax[id]) {
+						double h = 0;
+						while (currY >= yCorMin[id] && currY <= yCorMax[id]) {
+							currY += step;
+							double currZ = 0;
+							for (int j = 0; j < n; ++j) {
+								if (abs(zCor[id]->GetValue(p_id[j]) - currX) < step / 2 && abs(yCor[id]->GetValue(p_id[j]) - currY) < step / 2) {
+									currZ = xCor[id]->GetValue(p_id[j]);
+									if (currZ > h) {
+										h = currZ;
+									}
+								}
+							}
+						}
+						if (h > hMax) {
+							hMax = h;
+						}
+						if (h < hMin) {
+							hMin = h;
+						}
+						mountain.push_back(h);
+						if (featureName.at(0) == '1' || featureName.at(0) == '3') {
+							currX += step;
+						} else {
+							currX -= step;
+						}
+					}
+					double h = hMax;
+					double hStep = (hMax - hMin) / 100;
+					int currNum = 0;
+					int lastNum = 0;
+					int modifyNum = 0;
+					int hPos = 0;
+					while (h > hMin) {
+						currNum = 0;
+						for (int j = 0; j < mountain.size(); ++j) {
+							if (mountain[j] >= h) {
+								currNum += 1;
+							}
+						}
+						modifyNum = currNum - lastNum;
+						lastNum = currNum;
+						if (modifyNum > 2) {
+							hPos = h;
+							break;
+						}
+						h -= hStep;
+					}
+					int jPos = mountain.size() - 1;
+					bool firstFlag = false, secondFlag = false;
+					for (int j = 0; j < mountain.size(); ++j) {
+						if (mountain[j] >= hPos) {
+							firstFlag = true;
+							continue;
+						}
+						if (firstFlag && mountain[j] <= hPos) {
+							secondFlag = true;
+							continue;
+						}
+						if (secondFlag && mountain[j] >= hPos) {
+							jPos = j;
+							break;
+						}
+					}
+					if (featureName.at(0) == '1' || featureName.at(0) == '3') {
+						buccalDistalZMin = zCorMin[id];
+						buccalDistalZMax = zCorMin[id] + jPos * step;
+					} else {
+						buccalDistalZMin = zCorMax[id] - jPos * step;
+						buccalDistalZMax = zCorMax[id];
+					}
 				}
 
 				sigma = abs(xWTF - mu) / sqrt(2 * log(1 / t));
 
 				for (int j = 0; j < n; ++j) {
 					double frontTmp = 1;
-					x = zCor[id]->GetValue(p_id[j]);
-					if (useGaussian) {
+					x = xCor[id]->GetValue(p_id[j]);
+					z = zCor[id]->GetValue(p_id[j]);
+					if (useGaussian == 1) {
+						frontTmp = exp(0 - ((z - mu) * (z - mu)) / (2 * sigma * sigma));
+					} else if (useGaussian == 2) {
 						frontTmp = exp(0 - ((x - mu) * (x - mu)) / (2 * sigma * sigma));
+					}
+					if (useBuccalDistalRange) {
+						if (z > buccalDistalZMax || z < buccalDistalZMin) {
+							frontTmp = 0.1;
+						}
 					}
 					front_poss.push_back(frontTmp);
 				}
