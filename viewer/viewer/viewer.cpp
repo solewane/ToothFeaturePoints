@@ -61,7 +61,7 @@ viewer::viewer(QWidget *parent, Qt::WFlags flags) : QMainWindow(parent, flags) {
 	showAllBtn->setText("Show All");
 	hideAllBtn->setText("Hide All");
 	genFeatureBtn->setText("Generate");
-	showPointBtn->setText("Show Feature Points");
+	showPointBtn->setText("Show/Hide Feature Points");
 	outputLabel->setText("Unready");
 	featureCheckbox[0]->setText("distal");
 	featureCheckbox[1]->setText("mesial");
@@ -107,7 +107,7 @@ viewer::viewer(QWidget *parent, Qt::WFlags flags) : QMainWindow(parent, flags) {
 	connect(genFeatureBtn, SIGNAL(clicked()), this, SLOT(generateFeature()));
 	connect(this, SIGNAL(vtkGenFeature()), vtkWidget, SLOT(genFeature()));
 	connect(showPointBtn, SIGNAL(clicked()), vtkWidget, SLOT(showhideFeature()));
-	genFeatureBtn->setEnabled(false);
+	// genFeatureBtn->setEnabled(false);
 }
 
 viewer::~viewer() { }

@@ -113,8 +113,27 @@ void VtkWidget::refreshVisible() {
 		}
 	}
 	if (isShowFeature) {
+		// Read feature points from file
+		string inPath = TMP_PATH + string("feature_points.txt");
+		ifstream inFile(inPath);
 		vector<string> featureNames;
 		getFiles(POS_FEATURE_PATH, featureNames);
+		vector<int> featurePoints(featureNames.size(), 0);
+
+		while(!inFile.eof()) {
+			string featureName;
+			inFile >> featureName;
+			if (inFile.eof()) {
+				break;
+			}
+			int featureId;
+			inFile >> featureId;
+			for (int i = 0; i < featureNames.size(); ++i) {
+				if (featureNames[i] == featureName) {
+					featurePoints[i] = featureId;
+				}
+			}
+		}
 		for (int i = 0; i < featureNames.size(); ++i) {
 			bool isInShowList = false;
 			for (int j = 0; j < 5; ++j) {
@@ -127,208 +146,9 @@ void VtkWidget::refreshVisible() {
 			}
 			int id = (featureNames[i].at(0) - '1') * 7 + (featureNames[i].at(1) - '1');
 			if (isValid[id] && isVisible[id]) {
-				string path = TMP_PATH + featureNames[i] + string("_out.txt");
-				ifstream inFile(path.c_str());
-				int max_p_id = -1;
-				vector<int> p_id;
-				vector<double> front_poss;
-				vector<double> last_poss;
-				vector<double> possibility;
-				double max_poss = 0;
-
-				double minTmp = 1, maxTmp = -1;
-				while (!inFile.eof()) {
-					int tmpId;
-					double tmpPoss;
-					inFile >> tmpId;
-					if (inFile.eof()) {
-						break;
-					}
-					inFile >> tmpPoss;
-					p_id.push_back(tmpId);
-					last_poss.push_back(tmpPoss);
-					if (tmpPoss > maxTmp) {
-						maxTmp = tmpPoss;
-					}
-					if (tmpPoss < minTmp) {
-						minTmp = tmpPoss;
-					}
-				}
-				inFile.close();
-
-				int n = p_id.size();
-				for (int j = 0; j < n; ++j) {
-					if (maxTmp == minTmp) {
-						last_poss[j] = 1;
-					}
-					last_poss[j] = (last_poss[j] - minTmp) / (maxTmp - minTmp);
-					//last_poss[j] = 1;
-				}
-
-				string featureName = featureNames[i];
-				double mu = 0, x = 0, z = 0, xWTF = 0;
-				double sigma = 0;
-				double t = 0.000001;
-				int useGaussian = 0; // 1 - use Z 2 - use X
-
-				// [1, 2, 3, 4][1, 2, 3]_center_[distal, mesial]
-				if ((featureName.at(1) - '1') < 3 && (featureName.find("distal") != -1 || featureName.find("mesial") != -1)) {
-					useGaussian = 1;
-					
-					if (featureName.find("distal") != -1) {
-						if (featureName.at(0) == '1' || featureName.at(0) == '3') {
-							mu = zCorMax[id];
-						} else {
-							mu = zCorMin[id];
-						}
-					} else {
-						if (featureName.at(0) == '1' || featureName.at(0) == '3') {
-							mu = zCorMin[id];
-						} else {
-							mu = zCorMax[id];
-						}
-					}
-					xWTF = (zCorMin[id] + zCorMax[id]) / 2;
-				}
-
-				// [1, 2, 3, 4][1_incisal, 2_cusp]
-				if ((featureName.at(1) == '1' && featureName.find("incisal") != -1) || (featureName.at(1) == '2' && featureName.find("cusp") != -1)) {
-					useGaussian = 1;
-					mu = (zCorMin[id] + zCorMax[id]) / 2;
-					xWTF = max(zCorMax[id], zCorMin[id]);
-				}
-
-				// [1, 2, 3, 4][3_cusp]
-				if (featureName.at(1) == '2' && featureName.find("cusp") != -1) {
-					useGaussian = 2;
-					mu = xCorMax[id];
-					xWTF = (xCorMax[id] + xCorMin[id]) / 2;
-				}
-
-				bool useBuccalDistalRange = false;
-				double buccalDistalZMin = 0;
-				double buccalDistalZMax = 0;
-				if ((featureName.at(1) == '6' || featureName.at(1) == '7') && featureName.find("cusp") != -1) {
-					useGaussian = 2;
-					mu = xCorMax[id];
-					xWTF = (xCorMax[id] + xCorMin[id]) / 2;
-				}
-				if (featureName.at(1) == '6' && featureName.find("distal_cusp") != -1) {
-					useBuccalDistalRange = true;
-					double step = (zCorMax - zCorMin) / 10;
-					vector<double> mountain;
-					double currY = yCorMin[id];
-					double currX = 0;
-					if (featureName.at(0) == '1' || featureName.at(0) == '3') {
-						currX = zCorMin[id];
-					} else {
-						currX = zCorMax[id];
-					}
-					double hMax = 0;
-					double hMin = 0;
-					while (currX >= zCorMin[id] && currX <= zCorMax[id]) {
-						double h = 0;
-						while (currY >= yCorMin[id] && currY <= yCorMax[id]) {
-							currY += step;
-							double currZ = 0;
-							for (int j = 0; j < n; ++j) {
-								if (abs(zCor[id]->GetValue(p_id[j]) - currX) < step / 2 && abs(yCor[id]->GetValue(p_id[j]) - currY) < step / 2) {
-									currZ = xCor[id]->GetValue(p_id[j]);
-									if (currZ > h) {
-										h = currZ;
-									}
-								}
-							}
-						}
-						if (h > hMax) {
-							hMax = h;
-						}
-						if (h < hMin) {
-							hMin = h;
-						}
-						mountain.push_back(h);
-						if (featureName.at(0) == '1' || featureName.at(0) == '3') {
-							currX += step;
-						} else {
-							currX -= step;
-						}
-					}
-					double h = hMax;
-					double hStep = (hMax - hMin) / 100;
-					int currNum = 0;
-					int lastNum = 0;
-					int modifyNum = 0;
-					int hPos = 0;
-					while (h > hMin) {
-						currNum = 0;
-						for (int j = 0; j < mountain.size(); ++j) {
-							if (mountain[j] >= h) {
-								currNum += 1;
-							}
-						}
-						modifyNum = currNum - lastNum;
-						lastNum = currNum;
-						if (modifyNum > 2) {
-							hPos = h;
-							break;
-						}
-						h -= hStep;
-					}
-					int jPos = mountain.size() - 1;
-					bool firstFlag = false, secondFlag = false;
-					for (int j = 0; j < mountain.size(); ++j) {
-						if (mountain[j] >= hPos) {
-							firstFlag = true;
-							continue;
-						}
-						if (firstFlag && mountain[j] <= hPos) {
-							secondFlag = true;
-							continue;
-						}
-						if (secondFlag && mountain[j] >= hPos) {
-							jPos = j;
-							break;
-						}
-					}
-					if (featureName.at(0) == '1' || featureName.at(0) == '3') {
-						buccalDistalZMin = zCorMin[id];
-						buccalDistalZMax = zCorMin[id] + jPos * step;
-					} else {
-						buccalDistalZMin = zCorMax[id] - jPos * step;
-						buccalDistalZMax = zCorMax[id];
-					}
-				}
-
-				sigma = abs(xWTF - mu) / sqrt(2 * log(1 / t));
-
-				for (int j = 0; j < n; ++j) {
-					double frontTmp = 1;
-					x = xCor[id]->GetValue(p_id[j]);
-					z = zCor[id]->GetValue(p_id[j]);
-					if (useGaussian == 1) {
-						frontTmp = exp(0 - ((z - mu) * (z - mu)) / (2 * sigma * sigma));
-					} else if (useGaussian == 2) {
-						frontTmp = exp(0 - ((x - mu) * (x - mu)) / (2 * sigma * sigma));
-					}
-					if (useBuccalDistalRange) {
-						if (z > buccalDistalZMax || z < buccalDistalZMin) {
-							frontTmp = 0.1;
-						}
-					}
-					front_poss.push_back(frontTmp);
-				}
-
-				for (int j = 0; j < n; ++j) {
-					double possTmp = front_poss[j] * last_poss[j];
-					possibility.push_back(possTmp);
-					if (max_poss == 0 || possTmp > max_poss) {
-						max_poss = possTmp;
-						max_p_id = p_id[j];
-					}
-				}
 				
 				double p[3];
-				polydata[id]->GetPoint(max_p_id, p);
+				polydata[id]->GetPoint(featurePoints[i], p);
 
 				vtkSmartPointer<vtkSphereSource> pointSource = vtkSmartPointer<vtkSphereSource>::New();
 				pointSource->SetCenter(p[0], p[1], p[2]);
@@ -473,7 +293,8 @@ void VtkWidget::getNewCor(int id) {
 void VtkWidget::genFeature() {
 	vector<string> featureNames;
 	getFiles(POS_FEATURE_PATH, featureNames);
-	#pragma omp parallel for
+	string outPath = TMP_PATH + string("feature_points.txt");
+	ofstream featureFile(outPath);
 	for (int i = 0; i < featureNames.size(); ++i) {
 		int id = (featureNames[i].at(0) - '1') * 7 + (featureNames[i].at(1) - '1');
 		if (isValid[id]) {
@@ -519,8 +340,53 @@ void VtkWidget::genFeature() {
 				outFile << endl;
 			}
 			outFile.close();
+			
+			vector<double> last_poss;
+			vector<double> last_mu;
+			double max_mu = -1.0;
+			double min_mu = -1.0;
+
+			// Get Last Poss
+			if (false) {
+				//
+			} else {
+				for (int j = 0; j < validPoints.size(); ++j) {
+					double corP[3] = { xCor[id]->GetValue(validPoints[j]), yCor[id]->GetValue(validPoints[j]), zCor[id]->GetValue(validPoints[j]) };
+					double corQ[3] = { (corP[0] - xCorMin[id]) / (xCorMax[id] - xCorMin[id]), (corP[1] - yCorMin[id]) / (yCorMax[id] - yCorMin[id]), (corP[2] - zCorMin[id]) / (zCorMax[id] - zCorMin[id]) };
+					double a = (corQ[0] - cen[0]) * (corQ[0] - cen[0]) / (r[0] * r[0] * rate * rate);
+					double b = (corQ[1] - cen[1]) * (corQ[1] - cen[1]) / (r[1] * r[1] * rate * rate);
+					double c = (corQ[2] - cen[2]) * (corQ[2] - cen[2]) / (r[2] * r[2] * rate * rate);
+					double mu = a + b + c;
+					last_mu.push_back(mu);
+					if (max_mu == -1.0 || mu > max_mu) {
+						max_mu = mu;
+					}
+					if (min_mu == -1.0 || mu < min_mu) {
+						min_mu = mu;
+					}
+				}
+				for (int j = 0; j < validPoints.size(); ++j) {
+					last_mu[j] = (last_mu[j] - min_mu) / (max_mu - min_mu);
+					double current_last_poss = exp(0 - last_mu[j]);
+					last_poss.push_back(current_last_poss);
+				}
+			}
+
+			// Output to File
+			double max_poss = 0;
+			int max_p_id = 0;
+			for (int j = 0; j < validPoints.size(); ++j) {
+				double possTmp = last_poss[j];
+				if (max_poss == 0 || possTmp > max_poss) {
+					max_poss = possTmp;
+					max_p_id = validPoints[j];
+				}
+			}
+			featureFile << featureNames[i] << " " << max_p_id << endl;
 		}
 	}
+	featureFile.close();
+	/*
 	#pragma omp parallel for
 	for (int i = 0; i < featureNames.size(); ++i) {
 		int id = (featureNames[i].at(0) - '1') * 7 + (featureNames[i].at(1) - '1');
@@ -529,6 +395,120 @@ void VtkWidget::genFeature() {
 			WinExec(command.c_str(), SW_HIDE);
 		}
 	}
+	string outPath = TMP_PATH + string("feature_points.txt");
+	ofstream outFile(outPath);
+	for (int i = 0; i < featureNames.size(); ++i) {
+		int id = (featureNames[i].at(0) - '1') * 7 + (featureNames[i].at(1) - '1');
+		if (isValid[id]) {
+			string path = TMP_PATH + featureNames[i] + string("_out.txt");
+			ifstream inFile(path.c_str());
+			int max_p_id = -1;
+			vector<int> p_id;
+			vector<double> front_poss;
+			vector<double> last_poss;
+			vector<double> possibility;
+			double max_poss = 0;
+
+			double minTmp = 1, maxTmp = -1;
+			if (!inFile) {
+				
+			} else {
+				while (!inFile.eof()) {
+					int tmpId;
+					double tmpPoss;
+					inFile >> tmpId;
+					if (inFile.eof()) {
+						break;
+					}
+					inFile >> tmpPoss;
+					p_id.push_back(tmpId);
+					last_poss.push_back(tmpPoss);
+					if (tmpPoss > maxTmp) {
+						maxTmp = tmpPoss;
+					}
+					if (tmpPoss < minTmp) {
+						minTmp = tmpPoss;
+					}
+				}
+				inFile.close();
+			}
+
+			int n = p_id.size();
+			for (int j = 0; j < n; ++j) {
+				if (maxTmp == minTmp) {
+					last_poss[j] = 1;
+				}
+				last_poss[j] = (last_poss[j] - minTmp) / (maxTmp - minTmp);
+				//last_poss[j] = 1;
+			}
+
+			string featureName = featureNames[i];
+			double mu = 0, x = 0, z = 0, xWTF = 0;
+			double sigma = 0;
+			double t = 1e-6;
+			int useGaussian = 0; // 1 - use Z 2 - use X
+
+			// [1, 2, 3, 4][1, 2, 3]_center_[distal, mesial]
+			if ((featureName.at(1) - '1') < 3 && (featureName.find("distal") != -1 || featureName.find("mesial") != -1)) {
+				useGaussian = 1;
+
+				if (featureName.find("distal") != -1) {
+					if (featureName.at(0) == '1' || featureName.at(0) == '3') {
+						mu = zCorMax[id];
+					} else {
+						mu = zCorMin[id];
+					}
+				} else {
+					if (featureName.at(0) == '1' || featureName.at(0) == '3') {
+						mu = zCorMin[id];
+					} else {
+						mu = zCorMax[id];
+					}
+				}
+				xWTF = (zCorMin[id] + zCorMax[id]) / 2;
+			}
+
+			// [1, 2, 3, 4][1_incisal, 2_cusp]
+			if ((featureName.at(1) == '1' && featureName.find("incisal") != -1) || (featureName.at(1) == '2' && featureName.find("cusp") != -1)) {
+				useGaussian = 1;
+				mu = (zCorMin[id] + zCorMax[id]) / 2;
+				xWTF = max(zCorMax[id], zCorMin[id]);
+			}
+
+			// [1, 2, 3, 4][3_cusp]
+			if (featureName.at(1) == '2' && featureName.find("cusp") != -1) {
+				useGaussian = 2;
+				mu = xCorMax[id];
+				xWTF = (xCorMax[id] + xCorMin[id]) / 2;
+			}
+
+			sigma = abs(xWTF - mu) / sqrt(2 * log(1 / t));
+
+			for (int j = 0; j < n; ++j) {
+				double frontTmp = 1;
+				x = xCor[id]->GetValue(p_id[j]);
+				z = zCor[id]->GetValue(p_id[j]);
+				if (useGaussian == 1) {
+					frontTmp = exp(0 - ((z - mu) * (z - mu)) / (2 * sigma * sigma));
+				} else if (useGaussian == 2) {
+					frontTmp = exp(0 - ((x - mu) * (x - mu)) / (2 * sigma * sigma));
+				}
+				front_poss.push_back(frontTmp);
+			}
+
+			for (int j = 0; j < n; ++j) {
+				double possTmp = front_poss[j] * last_poss[j];
+				possibility.push_back(possTmp);
+				if (max_poss == 0 || possTmp > max_poss) {
+					max_poss = possTmp;
+					max_p_id = p_id[j];
+				}
+			}
+			outFile << featureName << " " << max_p_id << endl;
+		}
+	}
+	outFile.close();
+	*/
 }
 
 void VtkWidget::getFiles(string path, vector<string>& files) {

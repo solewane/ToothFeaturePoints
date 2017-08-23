@@ -19,17 +19,14 @@ class Dataset(object):
         self.filenames.sort()
         self.total_size = len(self.filenames)
         self.train_size = int(float(self.total_size) * r)
-        self.validate_size = self.total_size - self.train_size
+        self.validate_size = self.total_size - self.train_size - 1
 
     def getData(self):
         self.xs = readbmp(self.image_path, self.filenames)
         self.ys = readPoint(self.image_path, self.filenames)
 
-        self.xs -= np.mean(self.xs)
-        self.xs /= np.std(self.xs)
-
-        self.ys -= np.mean(self.ys)
-        self.ys /= np.std(self.ys)
+        self.xs -= np.mean(self.xs, axis = 0)
+        self.xs /= np.std(self.xs, axis = 0)
 
         print('Read complete.')
         self.showInfo()
@@ -44,6 +41,17 @@ class Dataset(object):
         print('Total size: ' + str(self.total_size))
         print('Train size: ' + str(self.train_size))
         print('Validate size: ' + str(self.validate_size))
+
+    def getTrainData(self):
+        return (self.xs[:self.train_size], self.ys[:self.train_size])
+    
+    def getValidateData(self):
+        batch_xs = self.xs[self.train_size:len(self.xs) - 2]
+        batch_ys = self.ys[self.train_size:len(self.ys) - 2]
+        return (batch_xs, batch_ys)
+    
+    def getTestData(self, i):
+        return (self.xs[i], self.ys[i])
 
 
 def readbmp(path, filenames):
@@ -68,8 +76,8 @@ def readPoint(path, filenames):
     for filename in filenames:
         with open(path + filename + '.txt', 'r') as feature_file:
             lines = feature_file.readlines()
-            point1 = [float(eval(i)) for i in lines[0].split()]
-            point2 = [float(eval(i)) for i in lines[1].split()]
+            point1 = [float(eval(i)) / 64.0 for i in lines[0].split()]
+            point2 = [float(eval(i)) / 64.0 for i in lines[1].split()]
             points.append(point1 + point2)
 
     return points
