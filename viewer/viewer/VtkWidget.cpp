@@ -291,16 +291,20 @@ void VtkWidget::getNewCor(int id) {
 }
 
 void VtkWidget::genFeature() {
+	int usingLocalInfoFeaturesNum = 6;
+	string usingLocalInfoFeatures[] = { "4_center_distal", "4_center_mesial", "4_cusp", "5_center_distal", "5_center_mesial", "5_cusp" };
+	int usingCNNNum = 4;
+	string usingCNNFeatures[] = { "6_center_distal", "6_center_mesial", "7_center_distal", "7_center_mesial" };
 	vector<string> featureNames;
 	getFiles(POS_FEATURE_PATH, featureNames);
-	string outPath = TMP_PATH + string("feature_points.txt");
-	ofstream featureFile(outPath);
+	string outFeaturePath = TMP_PATH + string("feature_points.txt");
+	ofstream featureFile(outFeaturePath);
 	for (int i = 0; i < featureNames.size(); ++i) {
 		int id = (featureNames[i].at(0) - '1') * 7 + (featureNames[i].at(1) - '1');
 		if (isValid[id]) {
+			// Get Valid Points Using position information
 			double cen[3];
 			double r[3];
-
 			string path = POS_FEATURE_PATH + string("\\") + featureNames[i] + string(".txt");
 			ifstream inFile(path.c_str());
 			for (int j = 0; j < 3; ++j) {
@@ -308,7 +312,6 @@ void VtkWidget::genFeature() {
 				inFile >> r[j];
 			}
 			inFile.close();
-
 			bool isFound = false;
 			double rate = 1.0;
 			vector<int> validPoints;
@@ -328,130 +331,106 @@ void VtkWidget::genFeature() {
 				}
 				rate = rate * 1.2;
 			}
-			string outPath = TMP_PATH + featureNames[i] + ".txt";
-			ofstream outFile(outPath);
-			for (int j = 0; j < validPoints.size(); ++j) {
-				outFile << validPoints[j] << " ";
-				vtkSmartPointer<vtkDoubleArray> histogram = vtkSmartPointer<vtkDoubleArray>::New();
-				getPFH(id, validPoints[j], histogram);
-				for (int k = 0; k < histogram->GetNumberOfTuples(); ++k) {
-					outFile << histogram->GetValue(k) << " ";
-				}
-				outFile << endl;
-			}
-			outFile.close();
-			
+
 			vector<double> last_poss;
+			vector<double> local_poss;
+			vector<double> front_poss;
+			vector<double> cnn_poss;
 			vector<double> last_mu;
 			double max_mu = -1.0;
 			double min_mu = -1.0;
 
 			// Get Last Poss
-			if (false) {
-				//
-			} else {
-				for (int j = 0; j < validPoints.size(); ++j) {
-					double corP[3] = { xCor[id]->GetValue(validPoints[j]), yCor[id]->GetValue(validPoints[j]), zCor[id]->GetValue(validPoints[j]) };
-					double corQ[3] = { (corP[0] - xCorMin[id]) / (xCorMax[id] - xCorMin[id]), (corP[1] - yCorMin[id]) / (yCorMax[id] - yCorMin[id]), (corP[2] - zCorMin[id]) / (zCorMax[id] - zCorMin[id]) };
-					double a = (corQ[0] - cen[0]) * (corQ[0] - cen[0]) / (r[0] * r[0] * rate * rate);
-					double b = (corQ[1] - cen[1]) * (corQ[1] - cen[1]) / (r[1] * r[1] * rate * rate);
-					double c = (corQ[2] - cen[2]) * (corQ[2] - cen[2]) / (r[2] * r[2] * rate * rate);
-					double mu = a + b + c;
-					last_mu.push_back(mu);
-					if (max_mu == -1.0 || mu > max_mu) {
-						max_mu = mu;
-					}
-					if (min_mu == -1.0 || mu < min_mu) {
-						min_mu = mu;
-					}
-				}
-				for (int j = 0; j < validPoints.size(); ++j) {
-					last_mu[j] = (last_mu[j] - min_mu) / (max_mu - min_mu);
-					double current_last_poss = exp(0 - last_mu[j]);
-					last_poss.push_back(current_last_poss);
-				}
-			}
-
-			// Output to File
-			double max_poss = 0;
-			int max_p_id = 0;
 			for (int j = 0; j < validPoints.size(); ++j) {
-				double possTmp = last_poss[j];
-				if (max_poss == 0 || possTmp > max_poss) {
-					max_poss = possTmp;
-					max_p_id = validPoints[j];
+				double corP[3] = { xCor[id]->GetValue(validPoints[j]), yCor[id]->GetValue(validPoints[j]), zCor[id]->GetValue(validPoints[j]) };
+				double corQ[3] = { (corP[0] - xCorMin[id]) / (xCorMax[id] - xCorMin[id]), (corP[1] - yCorMin[id]) / (yCorMax[id] - yCorMin[id]), (corP[2] - zCorMin[id]) / (zCorMax[id] - zCorMin[id]) };
+				double a = (corQ[0] - cen[0]) * (corQ[0] - cen[0]) / (r[0] * r[0] * rate * rate);
+				double b = (corQ[1] - cen[1]) * (corQ[1] - cen[1]) / (r[1] * r[1] * rate * rate);
+				double c = (corQ[2] - cen[2]) * (corQ[2] - cen[2]) / (r[2] * r[2] * rate * rate);
+				double mu = a + b + c;
+				last_mu.push_back(mu);
+				if (max_mu == -1.0 || mu > max_mu) {
+					max_mu = mu;
+				}
+				if (min_mu == -1.0 || mu < min_mu) {
+					min_mu = mu;
 				}
 			}
-			featureFile << featureNames[i] << " " << max_p_id << endl;
-		}
-	}
-	featureFile.close();
-	/*
-	#pragma omp parallel for
-	for (int i = 0; i < featureNames.size(); ++i) {
-		int id = (featureNames[i].at(0) - '1') * 7 + (featureNames[i].at(1) - '1');
-		if (isValid[id]) {
-			string command = string("python ..\\..\\train\\predict.py ") + TMP_PATH + featureNames[i] + string(".txt ") + featureNames[i] + string(" ") + TMP_PATH;
-			WinExec(command.c_str(), SW_HIDE);
-		}
-	}
-	string outPath = TMP_PATH + string("feature_points.txt");
-	ofstream outFile(outPath);
-	for (int i = 0; i < featureNames.size(); ++i) {
-		int id = (featureNames[i].at(0) - '1') * 7 + (featureNames[i].at(1) - '1');
-		if (isValid[id]) {
-			string path = TMP_PATH + featureNames[i] + string("_out.txt");
-			ifstream inFile(path.c_str());
-			int max_p_id = -1;
-			vector<int> p_id;
-			vector<double> front_poss;
-			vector<double> last_poss;
-			vector<double> possibility;
-			double max_poss = 0;
-
-			double minTmp = 1, maxTmp = -1;
-			if (!inFile) {
-				
-			} else {
-				while (!inFile.eof()) {
-					int tmpId;
-					double tmpPoss;
-					inFile >> tmpId;
-					if (inFile.eof()) {
-						break;
+			for (int j = 0; j < validPoints.size(); ++j) {
+				last_mu[j] = (last_mu[j] - min_mu) / (max_mu - min_mu);
+				double current_last_poss = exp(0 - last_mu[j]);
+				front_poss.push_back(0.5);
+				local_poss.push_back(0.5);
+				cnn_poss.push_back(1.0);
+				last_poss.push_back(current_last_poss);
+			}
+			
+			// Get Local Poss
+			bool usingLocalInfo = false;
+			for (int j = 0; j < usingLocalInfoFeaturesNum; ++j) {
+				if (featureNames[i].substr(1) == usingLocalInfoFeatures[j]) {
+					usingLocalInfo = true;
+				}
+			}
+			if (usingLocalInfo) {
+				string outPath = TMP_PATH + featureNames[i] + ".txt";
+				ofstream outFile(outPath);
+				for (int j = 0; j < validPoints.size(); ++j) {
+					outFile << validPoints[j] << " ";
+					vtkSmartPointer<vtkDoubleArray> histogram = vtkSmartPointer<vtkDoubleArray>::New();
+					getPFH(id, validPoints[j], histogram);
+					for (int k = 0; k < histogram->GetNumberOfTuples(); ++k) {
+						outFile << histogram->GetValue(k) << " ";
 					}
-					inFile >> tmpPoss;
-					p_id.push_back(tmpId);
-					last_poss.push_back(tmpPoss);
-					if (tmpPoss > maxTmp) {
-						maxTmp = tmpPoss;
+					outFile << endl;
+				}
+				outFile.close();
+				string command = string("python ..\\..\\train\\predict.py ") + TMP_PATH + featureNames[i] + string(".txt ") + featureNames[i] + string(" ") + TMP_PATH;
+				WinExec(command.c_str(), SW_HIDE);
+				string inLocalPath = TMP_PATH + featureNames[i] + string("_out.txt");
+				ifstream inLocalFile(inLocalPath.c_str());
+				double local_poss_max = -1.0, local_poss_min = -1.0;
+				if (inLocalFile) {
+					while (!inLocalFile.eof()) {
+						int tmpId;
+						double tmpPoss;
+						inFile >> tmpId;
+						if (inFile.eof()) {
+							break;
+						}
+						inFile >> tmpPoss;
+						int p_id = -1;
+						for (int j = 0; j < validPoints.size(); ++j) {
+							if (validPoints[j] == tmpId) {
+								local_poss[j] = tmpPoss;
+								if (tmpPoss > local_poss_max || local_poss_max == -1.0) {
+									local_poss_max = tmpPoss;
+								}
+								if (tmpPoss < local_poss_min || local_poss_min == -1.0) {
+									local_poss_min = tmpPoss;
+								}
+							}
+						}
 					}
-					if (tmpPoss < minTmp) {
-						minTmp = tmpPoss;
+					inFile.close();
+				}
+				if (local_poss_max != -1.0 && local_poss_min != -1.0) {
+					for (int j = 0; j < validPoints.size(); ++j) {
+						local_poss[j] = (local_poss[j] - local_poss_min) / (local_poss_max - local_poss_min) * 0.5 + 0.5;
 					}
 				}
-				inFile.close();
 			}
 
-			int n = p_id.size();
-			for (int j = 0; j < n; ++j) {
-				if (maxTmp == minTmp) {
-					last_poss[j] = 1;
-				}
-				last_poss[j] = (last_poss[j] - minTmp) / (maxTmp - minTmp);
-				//last_poss[j] = 1;
-			}
-
+			// Get Front Poss
 			string featureName = featureNames[i];
 			double mu = 0, x = 0, z = 0, xWTF = 0;
 			double sigma = 0;
-			double t = 1e-6;
+			double t = 0.25;
 			int useGaussian = 0; // 1 - use Z 2 - use X
 
 			// [1, 2, 3, 4][1, 2, 3]_center_[distal, mesial]
 			if ((featureName.at(1) - '1') < 3 && (featureName.find("distal") != -1 || featureName.find("mesial") != -1)) {
 				useGaussian = 1;
-
 				if (featureName.find("distal") != -1) {
 					if (featureName.at(0) == '1' || featureName.at(0) == '3') {
 						mu = zCorMax[id];
@@ -476,7 +455,14 @@ void VtkWidget::genFeature() {
 			}
 
 			// [1, 2, 3, 4][3_cusp]
-			if (featureName.at(1) == '2' && featureName.find("cusp") != -1) {
+			if (featureName.at(1) == '3' && featureName.find("cusp") != -1) {
+				useGaussian = 2;
+				mu = xCorMax[id];
+				xWTF = (xCorMax[id] + xCorMin[id]) / 2;
+			}
+
+			// [1, 2, 3, 4][6, 7][_buccal_][distal, mesial][_cusp]
+			if ((featureName.at(1) == '6' || featureName.at(1) == '7') && featureName.find("cusp") != -1) {
 				useGaussian = 2;
 				mu = xCorMax[id];
 				xWTF = (xCorMax[id] + xCorMin[id]) / 2;
@@ -484,31 +470,51 @@ void VtkWidget::genFeature() {
 
 			sigma = abs(xWTF - mu) / sqrt(2 * log(1 / t));
 
-			for (int j = 0; j < n; ++j) {
+			for (int j = 0; j < validPoints.size(); ++j) {
 				double frontTmp = 1;
-				x = xCor[id]->GetValue(p_id[j]);
-				z = zCor[id]->GetValue(p_id[j]);
+				x = xCor[id]->GetValue(validPoints[j]);
+				z = zCor[id]->GetValue(validPoints[j]);
 				if (useGaussian == 1) {
 					frontTmp = exp(0 - ((z - mu) * (z - mu)) / (2 * sigma * sigma));
 				} else if (useGaussian == 2) {
 					frontTmp = exp(0 - ((x - mu) * (x - mu)) / (2 * sigma * sigma));
 				}
-				front_poss.push_back(frontTmp);
+				front_poss[j] = frontTmp;
 			}
 
-			for (int j = 0; j < n; ++j) {
-				double possTmp = front_poss[j] * last_poss[j];
-				possibility.push_back(possTmp);
-				if (max_poss == 0 || possTmp > max_poss) {
-					max_poss = possTmp;
-					max_p_id = p_id[j];
+			// Get CNN Poss
+			bool usingCNN = false;
+			for (int j = 0; j < usingCNNNum; ++j) {
+				if (featureNames[i].substr(1) == usingCNNFeatures[j]) {
+					usingCNN = true;
 				}
 			}
-			outFile << featureName << " " << max_p_id << endl;
+			if (usingCNN) {
+				// TODO
+				// TODO
+				// TODO
+			}
+
+			// Output to File
+			double max_poss = 0;
+			int max_p_id = 0;
+			for (int j = 0; j < validPoints.size(); ++j) {
+				double possTmp = front_poss[j] * last_poss[j];
+				if (usingLocalInfo) {
+					possTmp *= local_poss[j];
+				}
+				if (usingCNN) {
+					possTmp *= cnn_poss[j];
+				}
+				if (max_poss == 0 || possTmp > max_poss) {
+					max_poss = possTmp;
+					max_p_id = validPoints[j];
+				}
+			}
+			featureFile << featureNames[i] << " " << max_p_id << endl;
 		}
 	}
-	outFile.close();
-	*/
+	featureFile.close();
 }
 
 void VtkWidget::getFiles(string path, vector<string>& files) {
