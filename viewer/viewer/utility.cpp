@@ -120,7 +120,7 @@ void autoCheckPCA(vtkSmartPointer<vtkPolyData> polydata[28], vtkSmartPointer<vtk
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 7; ++j) {
 			int id = i * 7 + j;
-			if (!isValid[i])	{
+			if (!isValid[id])	{
 				continue;
 			}
 			double tmpY[3] = { yAxis[id]->GetValue(0), yAxis[id]->GetValue(1), yAxis[id]->GetValue(2) };

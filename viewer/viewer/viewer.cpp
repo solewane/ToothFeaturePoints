@@ -99,6 +99,8 @@ viewer::viewer(QWidget *parent, Qt::WFlags flags) : QMainWindow(parent, flags) {
 
 	this->setCentralWidget(mainWidget);
 
+	//vtkWidget->showAxis(0);
+
 	connect(showAllBtn, SIGNAL(clicked()), this, SLOT(showAllTeeth()));
 	connect(hideAllBtn, SIGNAL(clicked()), this, SLOT(hideAllTeeth()));
 	connect(showAllBtn, SIGNAL(clicked()), vtkWidget, SLOT(showAllTeeth()));

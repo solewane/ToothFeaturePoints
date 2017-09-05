@@ -11,6 +11,8 @@
 #include <vtkDoubleArray.h>
 #include <vtkSphereSource.h>
 #include <vtkProperty.h>
+#include <vtkLineSource.h>
+#include <vtkMatrix4x4.h>
 
 #include <QObject>
 #include <QString>
@@ -19,12 +21,14 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <sstream>
 #include <io.h>
 
 #include <Windows.h>
 
 #include "pfh.h"
 #include "utility.h"
+#include "BmpWriter.h"
 
 using namespace std;
 
@@ -74,11 +78,13 @@ private:
 	void getFiles(string path, vector<string>& files);
 	void getPFH(int i, int j, vtkSmartPointer<vtkDoubleArray> &histogram);
 	void getNormal(int i);
+	void outputToImage(string filePath, int id);
 
 public slots:
 	void setToothVisible(int i);
 	void showAllTeeth();
 	void hideAllTeeth();
+	void showAxis(int id);
 	void showRange(string filename);
 	void genFeature();
 	void showhideFeature();

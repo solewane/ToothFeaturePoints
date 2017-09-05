@@ -3,6 +3,7 @@
 
 #define POS_FEATURE_PATH "E:\\data\\pos_feature"
 #define MODEL_PATH "E:\\train\\"
+//#define MODEL_PATH "E:\\data\\stl\\16\\teeth_stl\\"
 #define TMP_PATH "E:\\tmp\\"
 
 #include <vtkPolyData.h>

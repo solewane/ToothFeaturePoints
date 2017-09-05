@@ -1,9 +1,12 @@
 import reader
 import tensorflow as tf
 import random
+import sys
 import numpy as np
 
-d = reader.Dataset(0.95)
+id = sys.argv[1]
+
+d = reader.Dataset(0.95, id)
 d.getData()
 
 
@@ -97,4 +100,4 @@ print(test_data[1])
 '''
 
 saver = tf.train.Saver()
-saver.save(sess, './cnn_model')
+saver.save(sess, 'E:/cnnModel/' + str(id) + '/cnn_model')

@@ -13,7 +13,8 @@ class Dataset(object):
     train_size = 0
     validate_size = 0
 
-    def __init__(self, r):
+    def __init__(self, r, id):
+        self.image_path = 'E:\\data\\img\\' + str(id) + '\\'
         print('Read images from ' + self.image_path)
         self.filenames = list(set([i[:i.find('.')] for i in os.listdir(self.image_path)]))
         self.filenames.sort()
